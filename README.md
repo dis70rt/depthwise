@@ -43,7 +43,7 @@ my-topic/
 └── trade-offs.md
 ```
 
-Each file has a primary question as its H1. Direct bullet links beneath the exact H2 `Follow-up questions` become child branches, in authored order.
+Each file has a primary question as its H1. Direct bullet links beneath the exact H2 `Follow-up questions` become child branches, in authored order. The viewer hides this structural section from previews and heading outlines because the upcoming branches already show these questions.
 
 ```markdown
 # How does this work?

@@ -157,7 +157,7 @@ ASCII is being used in the familiar terminal-art sense. The examples use Unicode
 - Highlights the current section when the user scrolls through a long preview.
 - Shows the focused file title and relative path as orientation context.
 - A file with no headings displays `No headings in this file`.
-- Treat the structural `Follow-up questions` section as a normal outline entry when present.
+- Exclude the structural `Follow-up questions` section from the preview and heading outline; its links supply the upcoming branches.
 - Do not replace this with an operating-system directory browser.
 - On narrow screens, expose the outline through a drawer or toggle while preserving access to the main tree.
 
@@ -478,7 +478,7 @@ Root `index.md` example:
 - Generate unique heading anchors consistently, including repeated headings.
 - Extract the right outline from the same parsed document representation used for rendering.
 - Handle skipped heading levels without inventing headings or changing the document.
-- Keep canonical follow-up links visible in the preview as navigation controls even though the same relationships also appear as branches.
+- Hide the canonical `Follow-up questions` heading and section contents from previews and outlines. Preserve the source links to generate child branches; navigate follow-ups through those branches.
 - Imported answers, if present in an existing document, are not automatically detected or deleted. The app does not generate answers; the skill produces question-only folders.
 
 ## 14. Reusable React libraries and responsibilities
@@ -936,3 +936,10 @@ Replaced the reading font with locally hosted Atkinson Hyperlegible Next. Questi
 Desktop expanded files are 576px wide, collapsed questions are 336px wide, and the right outline is 320px wide. Compact files use 316.8px / 288px. The wider layout preserves two-line truncation and existing branch geometry.
 
 `tests/readability_browser.py` verifies loaded font families, computed reading sizes, 100% display scale, no document overflow, and expansion at 1920×1080; it also checks 1440×900 and 390px layouts. The existing browser acceptance suite and all 16 unit/contract tests remain passing.
+
+### 23.6 Follow-ups appear in branches only
+
+- [x] Remove the duplicate follow-up heading and link list from expanded previews and their heading outlines.
+- [x] Keep source Markdown unchanged and use its follow-up links to generate upcoming branches.
+- [x] Preserve ordinary reference links outside the reserved section, including reference-style links defined inside it.
+- [x] Add regression coverage for hidden sections, child extraction, missing-child diagnostics, and branch navigation. User confirmed the change visually and requested committing without further verification.

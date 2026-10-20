@@ -69,8 +69,14 @@ with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='depthwise-tests
         for b in boxes:
             if a is not b and abs(a['x']-b['x'])<1:
                 assert a['y']+a['h'] <= b['y']+1 or b['y']+b['h'] <= a['y']+1
-    # Normal authored child link navigates in-place.
-    file_node(page, 'indexes/index.md').get_by_role('link', name='Why can an index make writes more expensive?').click()
+    # Follow-ups appear only as upcoming branches, not duplicate preview links.
+    expect(file_node(page,'indexes/index.md').locator('.preview')).not_to_contain_text('Follow-up questions')
+    expect(page.locator('.outline-rail')).not_to_contain_text('Follow-up questions')
+    expect(file_node(page,'indexes/index.md').locator('.preview a')).to_have_count(0)
+    file_node(page,'indexes/index.md').locator('.node-toggle').focus()
+    page.keyboard.press('ArrowRight')
+    page.keyboard.press('ArrowDown')
+    page.keyboard.press('Enter')
     settle(page)
     expect(file_node(page,'indexes/write-cost.md').locator('.node-toggle')).to_have_attribute('aria-expanded','true')
     expect(page.locator('.outline-rail .file-path')).to_have_text('indexes/write-cost.md')
@@ -132,7 +138,7 @@ with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='depthwise-tests
     # Broken targets, cycles, disconnected files, fragments, long questions, and inert embeds.
     long_question='How would you evaluate a very long question that keeps asking about assumptions, constraints, failure modes, and trade-offs across several systems without losing its meaning when its preview is collapsed?'
     robust = pack_at(Path(temp),'robust',{
-      'index.md': '# Root question?\n\n## Follow-up questions\n- [Child question?](nested/child.md)\n- [Missing?](missing.md)\n- [Long?](long.md)\n\n## References\n[Unlinked](other.md#repeat-1)\n![remote](https://example.invalid/image.png)\n<script>window.BAD=true</script>',
+      'index.md': '# Root question?\n\n## Follow-up questions\n- [Child question?](nested/child.md)\n- [Missing?](missing.md)\n- [Long?](long.md)\n\n## References\n[Missing reference](missing.md)\n[Unlinked](other.md#repeat-1)\n![remote](https://example.invalid/image.png)\n<script>window.BAD=true</script>',
       'nested/child.md': '# Child question?\n\n## Explore\n[Back](../index.md#references)\n\n## Follow-up questions\n- [Root question?](../index.md)',
       'long.md':'# '+long_question+'\n\n## Think\n- Why?',
       'other.md':'# Unlinked question?\n\n## Repeat\n- Why?\n\n## Repeat\n- How?'
@@ -160,7 +166,7 @@ with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='depthwise-tests
     settle(page)
     expect(page.locator('.outline-rail .file-path')).to_have_text('index.md')
     # Missing link gives a local message, not navigation away.
-    file_node(page,'index.md').get_by_role('link',name='Missing?',exact=True).click()
+    file_node(page,'index.md').get_by_role('link',name='Missing reference',exact=True).click()
     expect(page.get_by_role('status').filter(has_text='Missing Markdown')).to_be_visible()
     # Size failure preserves the active pack.
     huge = pack_at(Path(temp),'too-big',{'index.md':'# Big?\n'+'x'*(1024*1024)})

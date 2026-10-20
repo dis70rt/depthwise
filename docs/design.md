@@ -28,3 +28,5 @@ Copy review keeps the interface about concrete actions: open a folder, follow a 
 ## Readability at 1080p
 
 The user found the original 11–15px interface difficult to read on a 24-inch 1080p monitor. Use Atkinson Hyperlegible Next at 18px for both question titles and body text, with 20px section headings, 16px outline links, and 14px secondary labels. On phones, questions and body text remain 17px. Branch glyphs retain their original JetBrains Mono geometry; they do not dictate the reading font. Desktop previews widen to 576px, collapsed questions to 336px, and the outline to 320px. Review screenshots at 100% scale on a 1920×1080 viewport, including an expanded follow-up.
+
+Follow-up headings and lists are source structure for the upcoming tree branches. Hide the entire reserved section from expanded previews and heading outlines so it does not duplicate the branch questions. Ordinary reference links outside that section remain usable.

@@ -152,6 +152,8 @@ export function parseDocument(
   if (!raw.trim())
     warnings.push({ file: path, message: "This file is empty." });
   const children: ChildLink[] = [];
+  const hiddenNodes = new Set<Root["children"][number]>();
+  const hiddenHeadingIds = new Set<string>();
   let inFollowups = false;
   let sections = 0;
   for (const node of ast.children) {
@@ -159,6 +161,15 @@ export function parseDocument(
       inFollowups =
         node.depth === 2 && toString(node) === "Follow-up questions";
       if (inFollowups) sections++;
+    }
+    if (inFollowups) {
+      hiddenNodes.add(node);
+      walk(node, (descendant) => {
+        if (descendant.type === "heading") {
+          const data = descendant.data as { hProperties: { id: string } };
+          hiddenHeadingIds.add(data.hProperties.id);
+        }
+      });
     }
     if (!inFollowups || node.type !== "list" || node.ordered) continue;
     for (const item of node.children as ListItem[]) {
@@ -198,9 +209,15 @@ export function parseDocument(
     path,
     title: h1[0]?.text || path.split("/").pop()!.replace(/\.md$/i, ""),
     raw,
-    headings,
+    headings: headings.filter((heading) => !hiddenHeadingIds.has(heading.id)),
     children,
-    html: compiler.runSync(ast) as HtmlRoot,
+    html: compiler.runSync({
+      ...ast,
+      // Keep definitions available to ordinary reference links elsewhere.
+      children: ast.children.filter(
+        (node) => !hiddenNodes.has(node) || node.type === "definition",
+      ),
+    }) as HtmlRoot,
   };
 }
 

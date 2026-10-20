@@ -41,6 +41,36 @@ describe("Markdown folder contract", () => {
       pack.documents.get("index.md")!.children.map((c) => c.target),
     ).toEqual(["real.md"]);
   });
+  it("hides structural follow-ups while preserving branches and ordinary references", () => {
+    const raw =
+      "# Root?\n\n[Ordinary reference][r]\n\n## Follow-up questions\n### Hidden detail\n- [Child?](child.md)\n\n## Visible questions\n- What changes?\n\n## Follow-up questions\n- [Missing?](missing.md)\n\n[r]: child.md";
+    const pack = buildPack("pack", [
+      { path: "index.md", text: raw },
+      { path: "child.md", text: "# Child?" },
+    ]);
+    const document = pack.documents.get("index.md")!;
+    expect(document.raw).toBe(raw);
+    expect(document.children.map((child) => child.href)).toEqual([
+      "child.md",
+      "missing.md",
+    ]);
+    expect(document.headings.map((heading) => heading.text)).toEqual([
+      "Root?",
+      "Visible questions",
+    ]);
+    const rendered = JSON.stringify(document.html);
+    expect(rendered).not.toContain("Follow-up questions");
+    expect(rendered).not.toContain("Hidden detail");
+    expect(rendered).not.toContain("Missing?");
+    expect(rendered).toContain("What changes?");
+    expect(rendered).toContain("Ordinary reference");
+    expect(rendered).toContain('"href":"child.md"');
+    expect(
+      pack.warnings.some((warning) =>
+        warning.message.includes("Missing child"),
+      ),
+    ).toBe(true);
+  });
   it("blocks escaping, absolute, encoded escaping, and executable links", () => {
     expect(() => resolveLink("index.md", "../outside.md")).toThrow("leaves");
     expect(() => resolveLink("index.md", "%2e%2e/outside.md")).toThrow(
