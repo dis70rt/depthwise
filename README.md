@@ -103,6 +103,6 @@ The tested browser is desktop Chrome. Folder selection uses `webkitdirectory`; b
 
 ## Implementation notes
 
-The app uses React, TypeScript, Vite, Motion, react-zoom-pan-pinch, Radix Dialog, and the unified/remark/rehype Markdown pipeline. A small iterative layout arranges variable-height previews; visible connectors are box-drawing glyphs rather than ordinary diagram curves. Local JetBrains Mono and DM Sans fonts use the Catppuccin Mocha palette.
+The app uses React, TypeScript, Vite, Motion, react-zoom-pan-pinch, Radix Dialog, and the unified/remark/rehype Markdown pipeline. A small iterative layout arranges variable-height previews; visible connectors are box-drawing glyphs rather than ordinary diagram curves. Local JetBrains Mono and Atkinson Hyperlegible Next fonts use the Catppuccin Mocha palette.
 
 See [task.md](task.md) for the full requirements and completion evidence, and [design decisions](docs/design.md) for the library choice and visual rationale.

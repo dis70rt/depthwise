@@ -150,7 +150,7 @@ ASCII is being used in the familiar terminal-art sense. The examples use Unicode
 
 ### 6.3 Right heading outline
 
-- Narrow, independently scrollable sidebar; proposed width 240–280 px.
+- Narrow, independently scrollable sidebar; proposed width 320 px on desktop.
 - Shows headings from the focused Markdown file in document order.
 - Reflects H1–H6 nesting using indentation and small disclosure controls.
 - Clicking a heading brings that heading into view inside the expanded file.
@@ -181,7 +181,7 @@ ASCII is being used in the familiar terminal-art sense. The examples use Unicode
 - Keep deeper descendants hidden until their own parent opens.
 - Support text selection, normal links, and keyboard navigation inside the preview.
 - Do not make every click in the document collapse the node; use the title/disclosure control for toggling.
-- Proposed preview width: approximately 480–640 px, adjusted for available viewport size.
+- Proposed preview width: approximately 576 px on desktop, adjusted for available viewport size.
 - Proposed maximum reading height: approximately 65% of viewport height, then internal vertical scrolling.
 - Long lines in code blocks or tables scroll within the preview rather than stretching the whole tree.
 - Root or leaf files can still expand even when they have no child branches.
@@ -286,9 +286,9 @@ Use Catppuccin Mocha as the proposed dark palette. Values come from the official
 | Warnings | Yellow | `#f9e2af` |
 | Errors | Red | `#f38ba8` |
 
-- Use monospace for tree glyphs, question titles, and small navigation labels.
-- Evaluate a readable text face for Markdown bodies; monospace throughout remains an option if comfortable for long reading.
-- Keep body text around 15–16 px at normal zoom with generous line height.
+- Use JetBrains Mono for tree glyphs, code, and file paths. Use Atkinson Hyperlegible Next for questions and interface text.
+- Use Atkinson Hyperlegible Next for Markdown body text; reserve monospace for branches, code, and paths.
+- Use 18 px desktop question and body text at normal zoom, with 17 px on phones and generous line height.
 - Use restrained borders and surface changes to distinguish expanded content.
 - Preserve clear keyboard focus independently from mouse hover and the current reading section.
 - Check contrast in the actual composition, especially small muted text and connector visibility.
@@ -897,7 +897,7 @@ The implementation is in `src/`, the portable authoring skill is in `skills/dept
 - One parsed representation per document supplies headings, structural links, and rendered content. Parser work runs in a worker; directory reads are batched and cancellable.
 - Iterative tree layout measures expanded previews, preserves authored order, and draws shared box-character forks. General graph-editing features were not needed.
 - Root, relative links, unlinked files, generic folder fallback, cycle stops, and actionable warnings are implemented.
-- Catppuccin Mocha with locally bundled JetBrains Mono and DM Sans; font licenses ship under `public/licenses/`.
+- Catppuccin Mocha with locally bundled JetBrains Mono and Atkinson Hyperlegible Next; font licenses ship under `public/licenses/`.
 - Expanded previews mount lazily and animate their height without scaling text. Collapsed nodes retain question controls for accessible tree traversal. Heading navigation moves into a dialog on narrower screens.
 - The skill uses plain Markdown instructions and ordinary file paths. Native agent discovery is optional; no model APIs or agent-global installation are needed to generate or import a pack.
 
@@ -926,4 +926,13 @@ Generated screenshots and machine-readable browser reports live under ignored `a
 - `d72c08b`: animated ASCII explorer, inline previews, outline, viewport controls, and real folder navigation; production build, browser acceptance, formatting, and visual checks passed before commit.
 - `e99a15a`: portable authoring skill, compatible sample validation, large-folder improvements, responsive refinement, and run instructions; 16 tests, production browser checks, skill validation, and stress checks passed before commit.
 
-The final documentation commit closes the task checklists and records the verification audit. No application code was changed after the final passing production acceptance and visual-inspection run.
+The initial documentation commit closed the first-version checklist and recorded its verification audit. The subsequent user-requested readability improvement is recorded below.
+
+
+### 23.5 Readability follow-up for a 24-inch 1080p monitor
+
+Replaced the reading font with locally hosted Atkinson Hyperlegible Next. Questions now use the reading face rather than monospace, at 18px desktop / 17px phone; Markdown uses the same sizes. Outline links are 16px and secondary labels are at least 14px. The original monospace constraint now applies to branch glyphs, code, and paths, following the user's request for more readable fonts.
+
+Desktop expanded files are 576px wide, collapsed questions are 336px wide, and the right outline is 320px wide. Compact files use 316.8px / 288px. The wider layout preserves two-line truncation and existing branch geometry.
+
+`tests/readability_browser.py` verifies loaded font families, computed reading sizes, 100% display scale, no document overflow, and expansion at 1920×1080; it also checks 1440×900 and 390px layouts. The existing browser acceptance suite and all 16 unit/contract tests remain passing.

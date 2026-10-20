@@ -144,7 +144,7 @@ with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='depthwise-tests
     assert not any('example.invalid' in request for request in requests)
     question = file_node(page,'long.md').locator('.node-question')
     assert question.evaluate('(n)=>n.scrollHeight>n.clientHeight')
-    assert question.bounding_box()['height'] <= 48
+    assert question.evaluate('(n)=>n.clientHeight <= parseFloat(getComputedStyle(n).lineHeight)*2+1')
     toggle(page,'nested/child.md')
     expect(page.locator('.reference-label').filter(has_text='Ancestor reference')).to_be_visible()
     assert page.locator('.file-node').count() == 5

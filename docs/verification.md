@@ -54,3 +54,8 @@ Desktop Chrome is the verified engine, with desktop/tablet/phone viewport sizes.
 The authoring skill was used as a plain instruction document to produce two different-subject example folders; it does not depend on registering a native skill or calling a model API. Automatic skill discovery and installation remain specific to the user's agent. The app accepts ordinary Markdown folders independently of the skill.
 
 The application is ready for local use and a static host. No public deployment, external publishing, or agent-global skill installation was part of this task. All commits are scoped to Depthwise inside the existing parent repository.
+
+
+## Readability follow-up
+
+`tests/readability_browser.py` confirms Atkinson Hyperlegible Next is actually loaded for questions, Markdown, and outline links. Reading text is 18px at 1920×1080 and 1440×900, 17px on a 390px phone viewport, with 16px outline links. Screenshots at 100% scale and the expanded 1080p tree were visually reviewed. The updated two-line assertion measures line height instead of assuming the previous smaller font size. The production acceptance suite and 16 unit tests pass with the new font and wider previews.

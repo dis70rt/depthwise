@@ -134,7 +134,7 @@ export function layoutTree(
   for (const node of ordered) {
     const open = expanded.has(node.id) && !node.reference && !node.missing;
     const width =
-      open && node.path ? (compact ? 300 : 460.8) : compact ? 249.6 : 288;
+      open && node.path ? (compact ? 316.8 : 576) : compact ? 288 : 336;
     const height = measured.get(node.id) ?? (open && node.path ? 340 : 80);
     sizes.set(node.id, { width, height });
     columns[node.depth] = Math.max(columns[node.depth] ?? 0, width);
