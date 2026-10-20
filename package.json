@@ -8,7 +8,10 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
-    "check": "npm run test && npm run build"
+    "check": "npm run test && npm run build",
+    "format": "prettier --write src vite.config.ts index.html",
+    "format:check": "prettier --check src vite.config.ts index.html",
+    "test:browser": "python tests/browser.py"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.3.0",
@@ -33,6 +36,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "prettier": "^3.9.10",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"
