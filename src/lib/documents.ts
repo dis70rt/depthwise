@@ -160,7 +160,7 @@ export function parseDocument(
         node.depth === 2 && toString(node) === "Follow-up questions";
       if (inFollowups) sections++;
     }
-    if (!inFollowups || node.type !== "list") continue;
+    if (!inFollowups || node.type !== "list" || node.ordered) continue;
     for (const item of node.children as ListItem[]) {
       const paragraph = item.children[0];
       if (paragraph?.type !== "paragraph") continue;
@@ -398,27 +398,35 @@ export async function importFiles(
   if (accepted.reduce((sum, f) => sum + f.size, 0) > LIMITS.totalBytes)
     throw new Error("This folder exceeds the 20 MiB Markdown limit.");
   const sources: Source[] = [];
-  for (let i = 0; i < accepted.length; i++) {
+  for (let i = 0; i < accepted.length; i += 16) {
     signal.throwIfAborted();
-    const file = accepted[i];
-    progress(`Reading ${i + 1} of ${accepted.length}: ${file.name}`);
-    let text: string;
-    try {
-      text = new TextDecoder("utf-8", { fatal: true }).decode(
-        await file.arrayBuffer(),
-      );
-    } catch {
-      throw new Error(
-        `Could not read UTF-8 Markdown: ${file.name}. Save it as UTF-8 and retry.`,
-      );
-    }
-    sources.push({
-      path: nested
-        ? file.webkitRelativePath.split("/").slice(1).join("/")
-        : file.name,
-      text,
-    });
-    if (i % 16 === 0) await new Promise((resolve) => setTimeout(resolve, 0));
+    const batch = accepted.slice(i, i + 16);
+    progress(
+      `Reading ${Math.min(i + 16, accepted.length)} of ${accepted.length}: ${batch[0].name}`,
+    );
+    const loaded = await Promise.all(
+      batch.map(async (file) => {
+        let text: string;
+        try {
+          text = new TextDecoder("utf-8", { fatal: true }).decode(
+            await file.arrayBuffer(),
+          );
+        } catch {
+          throw new Error(
+            `Could not read UTF-8 Markdown: ${file.name}. Save it as UTF-8 and retry.`,
+          );
+        }
+        return {
+          path: nested
+            ? file.webkitRelativePath.split("/").slice(1).join("/")
+            : file.name,
+          text,
+        };
+      }),
+    );
+    signal.throwIfAborted();
+    sources.push(...loaded);
+    await new Promise((resolve) => setTimeout(resolve, 0));
   }
   signal.throwIfAborted();
   progress("Checking questions and links…");

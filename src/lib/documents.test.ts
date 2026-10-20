@@ -139,3 +139,13 @@ describe("Markdown folder contract", () => {
     expect(pack.warnings).toHaveLength(0);
   });
 });
+
+it("does not interpret numbered lists as structural child bullets", () => {
+  const pack = buildPack("pack", [
+    {
+      path: "index.md",
+      text: "# Root?\n\n## Follow-up questions\n1. [Numbered?](numbered.md)",
+    },
+  ]);
+  expect(pack.documents.get("index.md")!.children).toEqual([]);
+});

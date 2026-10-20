@@ -13,3 +13,13 @@ Library evaluation: React Flow handles general node-graph interaction, but we do
 Geometry: main workspace width = viewport minus 264 px outline on desktop. At narrow widths the outline moves to a dialog. Tree columns use the maximum visible node width at that depth plus a 96 px branch gap. Nodes and subtree allocations snap to a 20 px vertical grid. Shared branch glyphs snap to the same monospace advance. Preview widths adapt to narrow screens, and reading height is capped to avoid filling the vertical workspace with one document.
 
 All import documents stay in browser memory. No document telemetry, remote embeds, storage, or write-back. A refresh starts a new session.
+
+## Final review
+
+The right outline folds into a dialog at 1,100px and below, giving the tree usable space on tablets. Question previews use a two-line clamp and a full-title tooltip; body text stays selectable. Markdown is only mounted for expanded files. Folder reads run in batches of 16, parser work runs in a worker, and import progress does not redraw the existing workspace.
+
+The main preview animates its height for 200ms so text is revealed without being scaled. Position changes and focus pans remain brief. This is an intentional exception to the generic guideline to animate only transforms and opacity: scaling a reading preview would distort its text. Reduced-motion preferences remove that animation. Plain monospace questions/branches and the Catppuccin palette are explicit product requirements, taking precedence over the design skill's default palette and monospace restrictions. Shadows are limited to dialogs and notices that float over the workspace.
+
+The large tree retains lightweight collapsed controls so keyboard and assistive-technology traversal can access the complete visible hierarchy. Expensive Markdown previews are mounted lazily; large file-picker lists use content visibility. This preserves measured layout and full-title tooltips without paint-containment clipping them. The supported 1,000-file limit is exercised in Chrome, including replacement of an already large tree.
+
+Copy review keeps the interface about concrete actions: open a folder, follow a question, collapse a branch, return to root. It promises no scores, mastery, or automatic learning outcomes. The portable skill keeps short instructions while preserving exact section names, paths, and valid metadata.

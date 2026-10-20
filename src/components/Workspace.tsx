@@ -6,7 +6,12 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
-import { animate, useReducedMotion } from "motion/react";
+import {
+  animate,
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+} from "motion/react";
 import {
   TransformWrapper,
   TransformComponent,
@@ -178,6 +183,7 @@ function FileNode({
   scrolls: React.RefObject<Map<string, number>>;
   warningCount: number;
 }) {
+  const reduced = useReducedMotion();
   const ref = useRef<HTMLElement>(null);
   const scroll = useRef<HTMLDivElement>(null);
   const nav = useCallback(
@@ -225,7 +231,9 @@ function FileNode({
       <button
         className="node-toggle"
         aria-expanded={open}
-        aria-controls={`preview-${encodeURIComponent(node.id)}`}
+        aria-controls={
+          doc && open ? `preview-${encodeURIComponent(node.id)}` : undefined
+        }
         aria-label={`${open ? "Collapse" : "Expand"} ${node.title}`}
         title={node.title}
         onClick={() => toggle(node.id)}
@@ -247,42 +255,53 @@ function FileNode({
             : "Missing or invalid Markdown target"}
         </p>
       ) : null}
-      {doc && (
-        <div id={`preview-${encodeURIComponent(node.id)}`} hidden={!open}>
-          <div className="node-meta">
-            <span>
-              <Icon name="file" size={12} />
-              {doc.path}
-            </span>
-            {warningCount > 0 && (
-              <span className="warning-text">
-                {warningCount} {warningCount === 1 ? "warning" : "warnings"}
-              </span>
-            )}
-          </div>
-          <div
-            className="preview no-pan"
-            ref={scroll}
-            tabIndex={open ? 0 : -1}
-            onScroll={section}
-            aria-label={`Markdown preview: ${doc.title}`}
-            onPointerDown={() => focus(node.id)}
-            onFocus={() => focus(node.id)}
+      <AnimatePresence initial={false}>
+        {doc && open && (
+          <motion.div
+            id={`preview-${encodeURIComponent(node.id)}`}
+            key="preview"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: reduced ? 0 : 0.2 }}
+            style={{ overflow: "hidden" }}
           >
-            <Markdown document={doc} navigate={nav} />
-          </div>
-          <div className="node-footer">
-            <span>
-              {doc.children.length
-                ? `${doc.children.length} follow-up ${doc.children.length === 1 ? "question" : "questions"}`
-                : "End of this branch"}
-            </span>
-            <button onClick={() => toggle(node.id)}>
-              Collapse <span aria-hidden="true">−</span>
-            </button>
-          </div>
-        </div>
-      )}
+            <div className="node-meta">
+              <span>
+                <Icon name="file" size={12} />
+                {doc.path}
+              </span>
+              {warningCount > 0 && (
+                <span className="warning-text">
+                  {warningCount} {warningCount === 1 ? "warning" : "warnings"}
+                </span>
+              )}
+            </div>
+            <div
+              className="preview no-pan"
+              ref={scroll}
+              tabIndex={open ? 0 : -1}
+              onScroll={section}
+              role="region"
+              aria-label={`Markdown preview: ${doc.title}`}
+              onPointerDown={() => focus(node.id)}
+              onFocus={() => focus(node.id)}
+            >
+              <Markdown document={doc} navigate={nav} />
+            </div>
+            <div className="node-footer">
+              <span>
+                {doc.children.length
+                  ? `${doc.children.length} follow-up ${doc.children.length === 1 ? "question" : "questions"}`
+                  : "End of this branch"}
+              </span>
+              <button onClick={() => toggle(node.id)}>
+                Collapse <span aria-hidden="true">−</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {!doc && open && !node.reference && !node.missing ? (
         <p className="folder-note">Folder-derived branches</p>
       ) : null}
@@ -383,7 +402,10 @@ export function Workspace({
       }),
     [],
   );
-  const focus = useCallback((id: string) => setFocused(id), []);
+  const focus = useCallback((id: string) => {
+    setFocused(id);
+    if (pending.current?.id !== id) pending.current = { id };
+  }, []);
   const bringIntoView = useCallback(
     (id: string, force = false) => {
       const position = layout.positions.get(id);
@@ -438,13 +460,22 @@ export function Workspace({
       reduced ? 0 : 290,
     );
     return () => window.clearTimeout(handle);
-  }, [layout, tree, bringIntoView, reduced]);
+  }, [layout, tree, bringIntoView, reduced, focused]);
   useEffect(() => {
     pending.current = { id: root, heading: initialHeading };
   }, [root, initialHeading]);
   useEffect(() => {
-    setActiveHeading(document?.headings[0]?.id ?? "");
-  }, [document]);
+    let active = document?.headings[0]?.id ?? "";
+    const preview = window.document
+      .getElementById(`node-${encodeURIComponent(focused)}`)
+      ?.querySelector<HTMLElement>(".preview");
+    if (preview) {
+      const top = preview.getBoundingClientRect().top + 36;
+      for (const heading of preview.querySelectorAll<HTMLElement>("[id]"))
+        if (heading.getBoundingClientRect().top <= top) active = heading.id;
+    }
+    setActiveHeading(active);
+  }, [document, focused]);
 
   const toggle = useCallback(
     (id: string) => {

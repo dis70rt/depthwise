@@ -155,6 +155,7 @@ with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='depthwise-tests
     settle(page)
     expect(page.locator('.outline-rail .file-path')).to_have_text('other.md')
     expect(page.locator('.outline-rail').get_by_role('link',name='Repeat',exact=True)).to_have_count(2)
+    expect(page.locator('.outline-rail a[href="#repeat-1"]')).to_have_attribute('aria-current','location')
     page.get_by_role('button',name='← Return to main tree').click()
     settle(page)
     expect(page.locator('.outline-rail .file-path')).to_have_text('index.md')
@@ -186,6 +187,10 @@ with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='depthwise-tests
     toggle(reduced,'indexes/index.md')
     assert reduced.locator('.file-node').count() == 7
     assert reduced.locator('.branch-group').first.evaluate('(n)=>getComputedStyle(n).animationName') == 'none'
+    # Verify the packaged authoring skill is available from the running app.
+    skill_response=context.request.get(BASE+'/depthwise-question-tree-SKILL.md')
+    assert skill_response.ok
+    assert 'name: depthwise-question-tree' in skill_response.text()
     # Session-only documents are cleared by reload.
     page.reload()
     expect(page.get_by_role('heading', name='Follow the question.')).to_be_visible()

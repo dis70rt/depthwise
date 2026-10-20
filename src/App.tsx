@@ -1,10 +1,19 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  memo,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { buildPack, importFiles, type Pack } from "./lib/documents";
 import { Icon, Mark } from "./components/Icon";
 import { Modal } from "./components/Modal";
+import { WorkspaceBoundary } from "./components/WorkspaceBoundary";
 const Workspace = lazy(() =>
   import("./components/Workspace").then((module) => ({
-    default: module.Workspace,
+    default: memo(module.Workspace),
   })),
 );
 const sampleFiles = import.meta.glob(
@@ -40,6 +49,7 @@ export default function App() {
   const [entry, setEntry] = useState("");
   const [help, setHelp] = useState(false);
   const [format, setFormat] = useState(false);
+  const openHelp = useCallback(() => setHelp(true), []);
   const [warnings, setWarnings] = useState(false);
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
@@ -90,7 +100,12 @@ export default function App() {
         Skip to learning workspace
       </a>
       <header className="app-header">
-        <a href="./" className="brand" aria-label="Depthwise home">
+        <a
+          href="./"
+          className="brand"
+          translate="no"
+          aria-label="Depthwise home"
+        >
           <Mark />
           <span>
             depthwise<span className="brand-period">.</span>
@@ -134,6 +149,7 @@ export default function App() {
         className="visually-hidden"
         ref={picker}
         type="file"
+        name="markdown-folder"
         multiple
         {...(directorySupported ? { webkitdirectory: "", directory: "" } : {})}
         aria-label="Choose Markdown folder"
@@ -162,19 +178,21 @@ export default function App() {
               </div>
             }
           >
-            <Workspace
-              key={session.version}
-              pack={session.pack}
-              entry={session.entry}
-              mode={session.mode}
-              onHelp={() => setHelp(true)}
-            />
+            <WorkspaceBoundary key={session.version}>
+              <Workspace
+                key={session.version}
+                pack={session.pack}
+                entry={session.entry}
+                mode={session.mode}
+                onHelp={openHelp}
+              />
+            </WorkspaceBoundary>
           </Suspense>
         ) : (
           <div className="empty-layout">
             <section className="empty-intro">
               <div className="intro-note">
-                <span className="kicker-line" />
+                <span className="intro-rule" />
                 Your Markdown, connected.
               </div>
               <h1>
@@ -193,7 +211,11 @@ export default function App() {
                 <Icon name="folder" />
                 Open Markdown folder<span aria-hidden="true">↗</span>
               </button>
-              <button className="example-button" onClick={demo}>
+              <button
+                className="example-button"
+                onClick={demo}
+                disabled={Boolean(progress)}
+              >
                 Or explore an example tree <span aria-hidden="true">→</span>
               </button>
               <p className="privacy-note">
@@ -277,6 +299,7 @@ export default function App() {
             <label htmlFor="entry-file">Entry file</label>
             <select
               id="entry-file"
+              name="entry-file"
               value={entry}
               onChange={(event) => setEntry(event.target.value)}
             >

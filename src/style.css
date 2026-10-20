@@ -170,7 +170,7 @@ h3 {
   align-items: center;
   margin-bottom: 24px;
 }
-.kicker-line {
+.intro-rule {
   width: 25px;
   height: 1px;
   background: var(--accent);
@@ -1122,7 +1122,7 @@ h3 {
     padding: 26px 16px;
   }
   .node-toggle {
-    font-size: 12px;
+    font-size: 13px;
   }
 }
 @media (max-width: 759px) {
@@ -1265,7 +1265,7 @@ h3 {
     margin: 0 2px;
   }
   .node-toggle {
-    font-size: 12px;
+    font-size: 13px;
     padding: 18px 16px;
   }
   .preview {
@@ -1338,4 +1338,64 @@ h3 {
   font: inherit;
   color: inherit;
   margin: 0;
+}
+
+.markdown > h1:first-child + h2 {
+  margin-top: 2px;
+}
+@media (min-width: 760px) and (max-width: 1100px) {
+  .workspace-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .outline-rail {
+    display: none;
+  }
+  .outline-mobile {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-left: auto;
+    font-size: 12px;
+  }
+  .detached-back {
+    right: 24px;
+    top: 88px;
+  }
+}
+
+.workspace-recovery {
+  padding: 60px 32px;
+}
+.workspace-recovery h1 {
+  font-size: 24px;
+}
+.workspace-recovery p {
+  color: var(--muted);
+  margin: 20px 0;
+  font-size: 14px;
+}
+
+:root {
+  color-scheme: dark;
+  font-variant-numeric: tabular-nums;
+}
+.modal,
+.outline-rail {
+  overscroll-behavior: contain;
+}
+.file-picker-list button {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 70px;
+}
+.canvas-bottom {
+  bottom: calc(39px + env(safe-area-inset-bottom));
+}
+.tree-status {
+  bottom: calc(13px + env(safe-area-inset-bottom));
+}
+@media (max-width: 759px) {
+  .app-header {
+    padding-left: max(18px, env(safe-area-inset-left));
+    padding-right: max(18px, env(safe-area-inset-right));
+  }
 }
