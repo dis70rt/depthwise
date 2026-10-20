@@ -98,11 +98,7 @@ export function Outline({
         </p>
       )}
       <div className="rail-note">
-        <span className="tiny-branch" aria-hidden="true">
-          ├─
-          <br />
-          └─
-        </span>
+        <Icon name="root" size={22} />
         <p>
           One question.
           <br />A little deeper.

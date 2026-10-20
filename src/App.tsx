@@ -228,25 +228,26 @@ export default function App() {
               aria-label="Example of a branching question tree"
             >
               <div className="empty-tree-label">
-                A SMALL QUESTION CAN GO A LONG WAY
+                A small question can go a long way
               </div>
               <div className="illustration-root">
                 How do databases find a row?
               </div>
-              <div className="illustration-fork" aria-hidden="true">
-                ────┤
-              </div>
+              <svg
+                className="illustration-fork"
+                viewBox="0 0 74 188"
+                aria-hidden="true"
+              >
+                <path d="M0 89 C37 89 37 25 74 25 M0 89 C37 89 37 153 74 153" />
+                <path className="sample-active" d="M0 89 C37 89 37 89 74 89" />
+              </svg>
               <div className="illustration-children">
-                <div>
-                  <span aria-hidden="true">┌── </span>What makes a lookup fast?
-                </div>
+                <div>What makes a lookup fast?</div>
                 <div className="illustration-middle">
-                  <span aria-hidden="true">├── </span>How does an index work?
+                  How does an index work?
                   <span className="sample-plus">+</span>
                 </div>
-                <div>
-                  <span aria-hidden="true">└── </span>What are the trade-offs?
-                </div>
+                <div>What are the trade-offs?</div>
               </div>
               <p className="illustration-caption">
                 Open a question. Reveal what comes next.

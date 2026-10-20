@@ -8,7 +8,7 @@ Depthwise helps people prepare concepts by exploring questions and follow-up que
 
 The first version provides questions, navigation, and visual structure. It does not generate answers, assess mastery, score responses, or act as a tutor. The learning activity is thinking through a question and choosing where to explore next.
 
-The defining experience is a horizontally growing, animated ASCII tree with Markdown embedded in its branches. The right side contains a conventional outline of the focused file's headings.
+The defining experience is a horizontally growing question tree with animated curved branches and a highlighted active path with Markdown embedded in its branches. The right side contains a conventional outline of the focused file's headings.
 
 ## 2. Confirmed requirements from the discussion
 
@@ -18,7 +18,7 @@ The defining experience is a horizontally growing, animated ASCII tree with Mark
 - [x] Present concepts and follow-up questions in a tree.
 - [x] Generate branches automatically; authors do not manually draw connector characters.
 - [x] Make branches visibly fork and remain connected like tree branches.
-- [x] Preserve the ASCII/terminal character appearance of the main tree.
+- [x] Use smooth curved branches, with the exact active ancestor path highlighted in blue.
 - [x] Grow the tree horizontally as branches open.
 - [x] Clicking a file expands that file's Markdown content and reveals further file branches.
 - [x] In collapsed mode, show only the question, at most two lines, truncating longer text.
@@ -49,13 +49,13 @@ These choices make the specification concrete. They are proposals, not claims th
 | Upload processing | Browser-local import | Avoids requiring a backend for reading local documents |
 | Persistence | Current browser session only in the initial version | Keeps initial scope small and explicit |
 | Generic Markdown folders | Import with a clearly identified folder-based fallback | Allows browsing existing notes without the skill |
-| Selected viewport/layout | react-zoom-pan-pinch with a small iterative tree layout | Supports variable-height Markdown and ASCII junctions without graph-editing infrastructure |
+| Selected viewport/layout | react-zoom-pan-pinch with a small iterative tree layout | Supports variable-height Markdown and curved connections without graph-editing infrastructure |
 | Mobile | Usable responsive fallback; desktop is the primary target | Horizontal exploration needs space |
 | Packaging | Directory selection required; ZIP import deferred | Preserves the requested folder workflow |
 
 Implementation defaults selected under the instruction to complete this task:
 
-1. Branches are connected terminal-style forks, preserving the requested ASCII appearance.
+1. Branches are connected curves. The exact root-to-focus path is blue; unrelated routes remain muted.
 2. The right outline covers the focused file’s headings. At 1,100px and below it moves into a dialog.
 3. Selecting a child preserves expanded siblings.
 4. Supported limits are 1,000 Markdown files, 1 MiB per file, and 20 MiB total; large-folder checks exercise these boundaries.
@@ -146,7 +146,7 @@ What is a database index? ──┤
 
 The silhouette matters: branches fork from a shared parent path. Separate floating cards with unrelated lines do not fulfill the tree requirement.
 
-ASCII is being used in the familiar terminal-art sense. The examples use Unicode box-drawing characters (`─`, `│`, `┌`, `├`, `└`, `┤`) rather than strictly seven-bit ASCII. A strict ASCII fallback may use `-`, `|`, and `+`; this distinction must not accidentally change the visual direction.
+The text diagram above illustrates hierarchy only. The current visual direction explicitly replaces ASCII and box-drawing connectors with smooth SVG curves.
 
 ### 6.3 Right heading outline
 
@@ -170,7 +170,7 @@ ASCII is being used in the familiar terminal-art sense. The examples use Unicode
 - Keep the full title available to keyboard and assistive-technology users.
 - Do not truncate the underlying imported text.
 - Provide an unobtrusive expansion affordance, not extra descriptive body text.
-- Hover may reveal the full title; keyboard focus must offer an equivalent way to read it.
+- Do not show duplicate question popups on hover or focus. Expanding reveals the full title; the button accessible name always contains the full question.
 - File paths and diagnostic badges belong in secondary UI, not the collapsed question text.
 
 ### 7.2 Expanded
@@ -221,11 +221,11 @@ ASCII is being used in the familiar terminal-art sense. The examples use Unicode
 
 ### 8.2 Technical rendering direction
 
-The implemented viewport uses react-zoom-pan-pinch. A custom connector renderer places box-drawing glyphs along calculated orthogonal routes. React Flow and react-d3-tree were evaluated against variable-height Markdown previews; neither was needed for the selected reading interaction. See docs/design.md for the rationale.
+The implemented viewport uses react-zoom-pan-pinch. A custom SVG renderer draws cubic curves between measured node boundaries. React Flow and react-d3-tree were evaluated against variable-height Markdown previews; neither was needed for the selected reading interaction. See docs/design.md for the rationale.
 
-SVG paths may be used internally for measuring routes or clipping an animation, but the visible result must preserve the agreed terminal branch appearance. Do not substitute ordinary curves simply because the library makes them easy.
+Draw visible SVG curves with no arrowheads. Animate their strokes from parent to child after the viewport reaches the focused question. Highlight only edges on the exact ancestor path, including repeated file occurrences and folder fallback.
 
-Measure glyph advance and line height, snap routes to the same character grid, and keep junctions aligned. Avoid creating one React component per character across the whole forest; use grouped text runs or a similarly efficient renderer. Validate connector alignment at supported zoom levels and browser display scaling before committing to an approach.
+Use measured node dimensions and interpolate positions and widths together so curves stay attached during relayout. Keep strokes quiet at rest. Do not animate or pulse branches while reading.
 
 ### 8.3 Layout constraints
 
@@ -247,16 +247,16 @@ The following durations are starting values to tune in a real prototype, not res
 
 | Event | Proposed motion |
 | --- | --- |
-| Branch opens | Reveal connector runs from parent toward the new children, about 180–240 ms |
+| Branch opens | Draw curved connectors from parent toward new children, 420 ms after focus pan completes |
 | Child appears | Small 8–12 px horizontal settle and opacity transition, about 160–220 ms |
 | Markdown expands | Smooth size/layout transition, about 220–300 ms |
 | Siblings move | Coordinated position changes, about 220–300 ms |
-| Focus navigation | Minimal viewport pan, about 250–350 ms |
+| Focus navigation | Await a 360 ms canvas pan before expanding; keep the question anchored during relayout |
 | Collapse | Children fade, connectors retract, layout closes, about 180–240 ms |
 
 Requirements:
 
-- Animate branch segments as growing connected runs; do not scramble glyphs randomly.
+- Move the viewport first (360ms), await its actual completion, then expand the question and draw new curves (420ms). Pin the focused question during measured relayout. New clicks and manual gestures cancel obsolete openings.
 - Keep question text fully available when its node appears. Do not type out every letter.
 - Use a gentle ease-out and little or no spring overshoot.
 - Small sibling stagger is acceptable, capped so large sibling sets do not create long waits.
@@ -286,7 +286,7 @@ Use Catppuccin Mocha as the proposed dark palette. Values come from the official
 | Warnings | Yellow | `#f9e2af` |
 | Errors | Red | `#f38ba8` |
 
-- Use JetBrains Mono for tree glyphs, code, and file paths. Use Atkinson Hyperlegible Next for questions and interface text.
+- Use JetBrains Mono for code and file paths. Use Atkinson Hyperlegible Next for questions and interface text.
 - Use Atkinson Hyperlegible Next for Markdown body text; reserve monospace for branches, code, and paths.
 - Use 18 px desktop question and body text at normal zoom, with 17 px on phones and generous line height.
 - Use restrained borders and surface changes to distinguish expanded content.
@@ -503,7 +503,7 @@ Research findings:
 - react-markdown is a reusable Markdown renderer for React. [Project repository](https://github.com/remarkjs/react-markdown)
 - Radix Collapsible provides an existing disclosure primitive. [Component documentation](https://www.radix-ui.com/primitives/docs/components/collapsible)
 
-Selected package versions are pinned by package-lock.json. The selected viewport, Markdown, animation, and dialog libraries do not require paid features. Font licenses ship with the static assets. General graph-library edge animations were not used as a substitute for the ASCII connector renderer.
+Selected package versions are pinned by package-lock.json. The selected viewport, Markdown, animation, and dialog libraries do not require paid features. Font licenses ship with the static assets. Curved branch drawing uses SVG stroke animation and the existing Motion and viewport libraries, without a new graph dependency.
 
 The working prototype and browser fixtures exercise an expanded parent, three children, nested follow-ups, and long question titles. The chosen combination handles variable-height previews without a separate graph-layout package. Library comparison was an API/design assessment against these needs; it was not a benchmark claiming all candidate libraries were implemented.
 
@@ -524,7 +524,7 @@ Skill-use instructions for the implementing agent:
 
 1. Resolve skills from the active environment's skill catalog and read their `SKILL.md` entrypoints before applying them. Use relevant linked references as directed; do not assume these instructions are identical across versions.
 2. Tell the user which skills are being applied when first using them. Apply each skill to the relevant phase rather than loading every skill indiscriminately for every small edit.
-3. Preserve this project's explicit requirements when a skill suggests different defaults. Keep the horizontal ASCII tree, connected forks, inline Markdown previews, Catppuccin dark palette, question-only scope, and subtle motion. Do not replace this reading interface with a landing-page composition.
+3. Preserve this project's explicit requirements when a skill suggests different defaults. Keep the horizontal question tree, curved branches, blue active path, inline Markdown previews, Catppuccin dark palette, question-only scope, and subtle motion. Do not replace this reading interface with a landing-page composition.
 4. Use browser and screenshot review to verify the real tree silhouette, connector alignment, expanded text readability, and focus motion. A successful build alone does not establish these visual requirements.
 5. For the authoring skill, keep technical paths, the reserved `Follow-up questions` heading, metadata, and examples exact. Copy refinement must not change the content contract or make caveman instructions ambiguous.
 6. If a named skill is missing in a future environment, report the specific missing skill and continue independent authorized work. Do not claim it was used, install substitutes silently, or change the project scope.
@@ -540,7 +540,7 @@ This is a responsibility model, not implementation code or a prescribed source-f
 3. Validator: reports bad paths, missing targets, ambiguous structure, cycles, and unreachable files.
 4. Traversal model: constructs visible node occurrences from the selected root and expansion state.
 5. Layout: measures visible previews and calculates node positions and shared branch routes.
-6. Renderer: draws file previews and ASCII branches.
+6. Renderer: draws file previews and curved SVG branches.
 7. Interaction state: tracks focus, expanded occurrences, per-preview scroll positions, and viewport.
 8. Outline: derives heading navigation from the focused document.
 
@@ -554,7 +554,7 @@ Parse each file once per import when practical. Reuse document data across occur
 - Enter/Space toggles the focused disclosure control.
 - Provide keyboard movement to parent, visible children, and visible siblings; document the chosen shortcuts in a small help view.
 - Arrow shortcuts apply when a node control owns focus, not when the user is selecting document text or scrolling a code block.
-- Decorative ASCII branches are hidden from assistive technology.
+- Decorative SVG branches are hidden from assistive technology.
 - Provide a meaningful hierarchy/order for reading nodes without depending on visual coordinates.
 - The right outline is a labeled navigation region with links to document headings.
 - Maintain focus after collapse, reflow, outline navigation, and folder replacement.
@@ -779,10 +779,10 @@ Do not upload, publish, install packages, or call model APIs just to make this f
 - [x] Read and apply `design-taste-frontend` before prototyping; read `vercel-react-best-practices` before writing React components.
 - [x] Review proposed defaults and resolve any conflicting interpretation of tree appearance.
 - [x] Freeze the version-one Markdown relationship contract.
-- [x] Choose fonts and verify connected box-drawing glyphs.
+- [x] Choose readable fonts and verify connected branch geometry.
 - [x] Evaluate React Flow against react-d3-tree using variable-height previews.
 - [x] Choose a layout engine based on observed needs.
-- [x] Validate ASCII branch appearance, expansion, and focus motion in one small prototype.
+- [x] Validate curved branch appearance, expansion, and focus-before-expand motion in the browser.
 - [x] Confirm reusable components can be themed consistently.
 
 ### Phase B: folder import and document model
@@ -837,7 +837,7 @@ Do not upload, publish, install packages, or call model APIs just to make this f
 - [x] Clicking a collapsed file expands its own Markdown and reveals its immediate children.
 - [x] Multiple expanded branches remain usable without content overlap.
 - [x] Collapsed questions occupy at most two lines and expose the complete title accessibly.
-- [x] Branches are visibly connected forks with the agreed ASCII appearance.
+- [x] Branches visibly connect parent and child cards with smooth curves and exact active-path highlighting.
 - [x] Deeper files grow horizontally from their parents.
 - [x] The selected file is brought into view without disruptive automatic zooming.
 - [x] The right outline lists and navigates the focused file's headings.
@@ -931,7 +931,7 @@ The initial documentation commit closed the first-version checklist and recorded
 
 ### 23.5 Readability follow-up for a 24-inch 1080p monitor
 
-Replaced the reading font with locally hosted Atkinson Hyperlegible Next. Questions now use the reading face rather than monospace, at 18px desktop / 17px phone; Markdown uses the same sizes. Outline links are 16px and secondary labels are at least 14px. The original monospace constraint now applies to branch glyphs, code, and paths, following the user's request for more readable fonts.
+Replaced the reading font with locally hosted Atkinson Hyperlegible Next. Questions now use the reading face rather than monospace, at 18px desktop / 17px phone; Markdown uses the same sizes. Outline links are 16px and secondary labels are at least 14px. The monospace constraint now applies to code and paths, following the user's request for more readable fonts.
 
 Desktop expanded files are 576px wide, collapsed questions are 336px wide, and the right outline is 320px wide. Compact files use 316.8px / 288px. The wider layout preserves two-line truncation and existing branch geometry.
 
@@ -943,3 +943,20 @@ Desktop expanded files are 576px wide, collapsed questions are 336px wide, and t
 - [x] Keep source Markdown unchanged and use its follow-up links to generate upcoming branches.
 - [x] Preserve ordinary reference links outside the reserved section, including reference-style links defined inside it.
 - [x] Add regression coverage for hidden sections, child extraction, missing-child diagnostics, and branch navigation. User confirmed the change visually and requested committing without further verification.
+
+### 23.7 Curved branches and focus-first motion
+
+The user replaced the earlier ASCII requirement with a polished curved tree. This supersedes historical references to terminal glyphs. Preserve question-only Markdown import, inline previews, authored ordering, the right outline, Catppuccin dark, and large reading type.
+
+- [x] Rounded question surfaces, curved SVG branches, and quiet connection ports.
+- [x] Highlight the precise root-to-focused occurrence path in blue, including folder fallback.
+- [x] Await completion of the canvas move before mounting expanded Markdown and revealing child branches.
+- [x] Anchor the focused question during measured relayout; newer requests and user gestures cancel pending openings.
+- [x] Respect reduced motion with immediate final states.
+- [x] Replace purple highlights with consistent blue. Use the existing highlighted node border as the sole focus indicator for its question button and reading preview; remove the duplicate outline. Keep focus indicators on other controls and links.
+- [x] Update the empty-state illustration to match the new tree.
+
+### 23.8 Remove duplicate question popups
+
+- [x] Remove both the custom question tooltip and native title popup from question buttons. Preserve full accessible names and full titles when expanded.
+- [x] Leave changes uncommitted for user review.

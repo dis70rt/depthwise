@@ -13,7 +13,7 @@ ART = ROOT / 'artifacts'
 ART.mkdir(exist_ok=True)
 
 def settle(page):
-    page.wait_for_timeout(650)
+    page.wait_for_timeout(950)
 
 def node(page, path):
     return page.locator('.file-node').filter(has=page.locator(f'.node-meta')).filter(has_text=path)

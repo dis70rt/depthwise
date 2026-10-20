@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { buildPack } from "./documents";
-import { layoutTree, makeTree } from "./tree";
+import { activePath, layoutTree, makeTree } from "./tree";
 const pack = buildPack("test", [
   {
     path: "index.md",
@@ -54,4 +54,21 @@ it("builds folder-derived grouping branches without inventing file links", () =>
   );
   expect(tree.nodes.size).toBe(4);
   expect(tree.nodes.get(JSON.stringify(["a/b.md"]))!.parent).toBe("@folder/a");
+});
+
+it("highlights only the focused occurrence's ancestors, including folder paths", () => {
+  const root = JSON.stringify(["index.md"]);
+  const a = JSON.stringify(["index.md", "a.md"]);
+  const reference = JSON.stringify(["index.md", "a.md", "index.md"]);
+  const tree = makeTree(pack, "index.md", "links", new Set([root, a]));
+  expect([...activePath(tree.nodes, reference)]).toEqual([reference, a, root]);
+  expect(activePath(tree.nodes, JSON.stringify(["index.md", "b.md"]))).toEqual(
+    new Set([JSON.stringify(["index.md", "b.md"]), root]),
+  );
+  expect(activePath(tree.nodes, "unknown").size).toBe(0);
+  const folders = makeTree(pack, "index.md", "folders", new Set(["@folder"]));
+  expect([...activePath(folders.nodes, JSON.stringify(["a.md"]))]).toEqual([
+    JSON.stringify(["a.md"]),
+    "@folder",
+  ]);
 });

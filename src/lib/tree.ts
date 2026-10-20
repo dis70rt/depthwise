@@ -22,9 +22,7 @@ export interface Position {
   height: number;
   center: number;
 }
-export const ROW = 20;
-export const GLYPH = 9.6;
-const snap = (value: number) => Math.ceil(value / ROW) * ROW;
+const snap = (value: number) => Math.ceil(value / 8) * 8;
 
 export function makeTree(
   pack: Pack,
@@ -134,7 +132,7 @@ export function layoutTree(
   for (const node of ordered) {
     const open = expanded.has(node.id) && !node.reference && !node.missing;
     const width =
-      open && node.path ? (compact ? 316.8 : 576) : compact ? 288 : 336;
+      open && node.path ? (compact ? 316 : 576) : compact ? 288 : 336;
     const height = measured.get(node.id) ?? (open && node.path ? 340 : 80);
     sizes.set(node.id, { width, height });
     columns[node.depth] = Math.max(columns[node.depth] ?? 0, width);
@@ -147,8 +145,7 @@ export function layoutTree(
     spans.set(node.id, Math.max(snap(sizes.get(node.id)!.height), total));
   }
   const xs = [48];
-  for (let i = 0; i < columns.length; i++)
-    xs[i + 1] = xs[i] + columns[i] + 115.2;
+  for (let i = 0; i < columns.length; i++) xs[i + 1] = xs[i] + columns[i] + 128;
   const positions = new Map<string, Position>();
   const stack = [{ id: tree.root, top: 60 }];
   let bottom = 0;
@@ -182,4 +179,18 @@ export function folderAncestors(path: string): string[] {
       .slice(0, -1)
       .map((_, i) => `@folder/${parts.slice(0, i + 1).join("/")}`),
   ];
+}
+
+/** The exact occurrence path; repeated file references stay independent. */
+export function activePath(
+  nodes: Map<string, TreeNode>,
+  focused: string,
+): Set<string> {
+  const path = new Set<string>();
+  let id: string | undefined = focused;
+  while (id && nodes.has(id) && !path.has(id)) {
+    path.add(id);
+    id = nodes.get(id)?.parent;
+  }
+  return path;
 }

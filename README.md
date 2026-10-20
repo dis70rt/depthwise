@@ -1,6 +1,6 @@
 # Depthwise
 
-Explore a folder of Markdown questions as a horizontal ASCII tree. Open a question to read its Markdown and reveal its follow-ups. A heading outline follows the focused file on the right.
+Explore a folder of Markdown questions as a horizontal question tree with curved branches and an active path. Open a question to read its Markdown and reveal its follow-ups. The canvas moves to a question before its preview expands. A heading outline follows the focused file on the right.
 
 Files stay in browser memory. There is no account, backend, answer generation, source-file editing, or document telemetry. Refreshing clears the imported session.
 

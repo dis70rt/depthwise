@@ -20,11 +20,10 @@ import {
 import type { Pack, Document as MarkdownDocument } from "../lib/documents";
 import { findPath, resolveLink, reachable } from "../lib/documents";
 import {
+  activePath,
   folderAncestors,
-  GLYPH,
   layoutTree,
   makeTree,
-  ROW,
   type Position,
   type TreeNode,
 } from "../lib/tree";
@@ -36,120 +35,41 @@ import { Modal } from "./Modal";
 function Branches({
   nodes,
   positions,
-  focus,
+  path,
 }: {
   nodes: Map<string, TreeNode>;
   positions: Map<string, Position>;
-  focus: string;
+  path: Set<string>;
 }) {
-  const groups = [];
-  for (const parent of nodes.values()) {
-    if (!parent.children.length) continue;
-    const pos = positions.get(parent.id);
-    if (!pos) continue;
-    const children = parent.children
-      .map((id) => ({ id, pos: positions.get(id) }))
-      .filter((c) => c.pos !== undefined) as { id: string; pos: Position }[];
-    if (!children.length) continue;
-    const start = pos.x + pos.width;
-    const end = Math.min(...children.map((c) => c.pos.x));
-    const trunk = Math.round((start + (end - start) / 2) / GLYPH) * GLYPH;
-    const minY = Math.min(pos.center, ...children.map((c) => c.pos.center));
-    const maxY = Math.max(pos.center, ...children.map((c) => c.pos.center));
-    const active =
-      parent.id === focus ||
-      children.some(
-        (c) => c.id === focus || focus.startsWith(c.id.slice(0, -1) + ","),
-      );
-    const marks = [];
-    const run = (x: number, y: number, width: number, key: string) => {
-      const count = Math.max(1, Math.round(width / GLYPH));
-      return (
-        <text
-          key={key}
-          x={x}
-          y={y}
-          textLength={width}
-          lengthAdjust="spacingAndGlyphs"
-        >
-          {"─".repeat(count)}
-        </text>
-      );
-    };
-    marks.push(run(start, pos.center, trunk - start + GLYPH / 2, "in"));
-    for (let y = minY + ROW; y < maxY; y += ROW)
-      marks.push(
-        <text
-          key={`v${y}`}
-          x={trunk}
-          y={y}
-          textAnchor="middle"
-          textLength={GLYPH}
-          lengthAdjust="spacingAndGlyphs"
-        >
-          │
-        </text>,
-      );
-    for (let i = 0; i < children.length; i++) {
-      const child = children[i];
-      const y = child.pos.center;
-      marks.push(run(trunk, y, child.pos.x - trunk, child.id));
-      let joint =
-        children.length === 1 && Math.abs(y - pos.center) < 1
-          ? "─"
-          : y === minY
-            ? "┌"
-            : y === maxY
-              ? "└"
-              : "├";
-      if (Math.abs(y - pos.center) < 1 && joint !== "─")
-        joint = y === minY ? "┬" : y === maxY ? "┴" : "┼";
-      marks.push(
-        <text
-          className="junction"
-          key={`j${child.id}`}
-          x={trunk}
-          y={y}
-          textAnchor="middle"
-          textLength={GLYPH}
-          lengthAdjust="spacingAndGlyphs"
-        >
-          {joint}
-        </text>,
-      );
-    }
-    if (!children.some((c) => Math.abs(c.pos.center - pos.center) < 1))
-      marks.push(
-        <text
-          className="junction"
-          key="parent-joint"
-          x={trunk}
-          y={pos.center}
-          textAnchor="middle"
-          textLength={GLYPH}
-          lengthAdjust="spacingAndGlyphs"
-        >
-          {pos.center === minY ? "┐" : pos.center === maxY ? "┘" : "┤"}
-        </text>,
-      );
-    groups.push(
+  const edges = [];
+  for (const child of nodes.values()) {
+    if (!child.parent) continue;
+    const parent = positions.get(child.parent);
+    const target = positions.get(child.id);
+    if (!parent || !target) continue;
+    const start = parent.x + parent.width;
+    const end = target.x;
+    const bend = Math.max(40, (end - start) * 0.5);
+    const active = path.has(child.id) && path.has(child.parent);
+    edges.push(
       <g
-        key={parent.id}
+        key={child.id}
         className={`branch-group ${active ? "branch-active" : ""}`}
+        data-from={child.parent}
+        data-to={child.id}
       >
-        {marks}
+        <path
+          className="branch-line"
+          pathLength={1}
+          d={`M ${start} ${parent.center} C ${start + bend} ${parent.center}, ${end - bend} ${target.center}, ${end} ${target.center}`}
+        />
+        <circle className="branch-port" cx={end} cy={target.center} r={3.5} />
       </g>,
     );
   }
   return (
-    <svg
-      className="branches"
-      aria-hidden="true"
-      width="100%"
-      height="100%"
-      style={{ overflow: "visible" }}
-    >
-      <g dominantBaseline="central">{groups}</g>
+    <svg className="branches" aria-hidden="true" width="100%" height="100%">
+      {edges}
     </svg>
   );
 }
@@ -159,6 +79,8 @@ function FileNode({
   doc,
   open,
   focused,
+  onPath,
+  opening,
   position,
   measure,
   toggle,
@@ -173,6 +95,8 @@ function FileNode({
   doc?: MarkdownDocument;
   open: boolean;
   focused: boolean;
+  onPath: boolean;
+  opening: boolean;
   position: Position;
   measure: (id: string, height: number) => void;
   toggle: (id: string) => void;
@@ -216,10 +140,13 @@ function FileNode({
     onSection(node.id, current);
   };
   return (
-    <article
+    <motion.article
+      initial={reduced ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: reduced ? 0 : 0.24 }}
       ref={ref}
       id={`node-${encodeURIComponent(node.id)}`}
-      className={`file-node ${open ? "node-open" : ""} ${focused ? "node-focused" : ""} ${node.reference || node.missing ? "node-reference" : ""}`}
+      className={`file-node ${open ? "node-open" : ""} ${focused ? "node-focused" : ""} ${onPath ? "node-on-path" : ""} ${opening ? "node-opening" : ""} ${node.reference || node.missing ? "node-reference" : ""}`}
       style={{
         width: position.width,
         transform: `translate(${position.x}px, ${position.y}px)`,
@@ -227,6 +154,7 @@ function FileNode({
       aria-label={node.title}
       data-node-id={node.id}
       data-path={node.path}
+      data-opening={opening || undefined}
     >
       <button
         className="node-toggle"
@@ -235,17 +163,19 @@ function FileNode({
           doc && open ? `preview-${encodeURIComponent(node.id)}` : undefined
         }
         aria-label={`${open ? "Collapse" : "Expand"} ${node.title}`}
-        title={node.title}
         onClick={() => toggle(node.id)}
         onFocus={() => focus(node.id)}
         onKeyDown={(event) => onKey(event, node.id)}
       >
         <span className="node-question">{node.title}</span>
-        <span className="question-tooltip" aria-hidden="true">
-          {node.title}
-        </span>
         <span className="node-sign" aria-hidden="true">
-          {node.reference ? "↩" : node.missing ? "!" : open ? "−" : "+"}
+          {node.reference ? (
+            "↩"
+          ) : node.missing ? (
+            "!"
+          ) : (
+            <Icon name="chevron" size={17} />
+          )}
         </span>
       </button>
       {node.reference || node.missing ? (
@@ -305,7 +235,7 @@ function FileNode({
       {!doc && open && !node.reference && !node.missing ? (
         <p className="folder-note">Folder-derived branches</p>
       ) : null}
-    </article>
+    </motion.article>
   );
 }
 
@@ -325,6 +255,20 @@ export function Workspace({
   const root = mode === "links" ? JSON.stringify([entry]) : "@folder";
   const [expanded, setExpanded] = useState(() => new Set([root]));
   const [focused, setFocused] = useState(root);
+  const [opening, setOpening] = useState<string>();
+  const destination = useRef<{
+    id: string;
+    heading?: string;
+    ancestors: string[];
+  } | null>(null);
+  const transition = useRef(0);
+  const openingNode = useRef<string | undefined>(undefined);
+  const expansionAnchor = useRef<{
+    id: string;
+    x: number;
+    y: number;
+    zoom: number;
+  } | null>(null);
   const [measured, setMeasured] = useState<Map<string, number>>(
     () => new Map(),
   );
@@ -341,6 +285,7 @@ export function Workspace({
     id: string;
     heading?: string;
     keyboard?: boolean;
+    positioned?: boolean;
   } | null>(null);
   const reduced = useReducedMotion();
   const tree = useMemo(
@@ -353,6 +298,10 @@ export function Workspace({
   );
   const [positions, setPositions] = useState(layout.positions);
   const rendered = useRef(layout.positions);
+  const path = useMemo(
+    () => activePath(tree.nodes, focused),
+    [tree.nodes, focused],
+  );
   const current = tree.nodes.get(focused);
   const document = current?.path ? pack.documents.get(current.path) : undefined;
   const reached = useMemo(() => reachable(pack, entry), [pack, entry]);
@@ -383,8 +332,18 @@ export function Workspace({
           const old = from.get(id) ?? { ...to, x: to.x - 12 };
           const x = old.x + (to.x - old.x) * progress;
           const y = old.y + (to.y - old.y) * progress;
-          next.set(id, { ...to, x, y, center: y + to.height / 2 });
+          const width = old.width + (to.width - old.width) * progress;
+          next.set(id, { ...to, x, y, width, center: y + to.height / 2 });
         }
+        const anchor = expansionAnchor.current;
+        const pinned = anchor && next.get(anchor.id);
+        if (anchor && pinned)
+          void viewport.current?.setTransform(
+            anchor.x - pinned.x * anchor.zoom,
+            anchor.y - pinned.y * anchor.zoom,
+            anchor.zoom,
+            0,
+          );
         rendered.current = next;
         setPositions(next);
       },
@@ -402,39 +361,93 @@ export function Workspace({
       }),
     [],
   );
-  const focus = useCallback((id: string) => {
-    setFocused(id);
-    if (pending.current?.id !== id) pending.current = { id };
+  const cancelOpening = useCallback(() => {
+    transition.current++;
+    destination.current = null;
+    openingNode.current = undefined;
+    expansionAnchor.current = null;
+    pending.current = null;
+    setOpening(undefined);
   }, []);
+  useEffect(
+    () => () => {
+      transition.current++;
+    },
+    [],
+  );
+  const focus = useCallback(
+    (id: string) => {
+      if (openingNode.current && openingNode.current !== id) cancelOpening();
+      if (expansionAnchor.current?.id !== id) expansionAnchor.current = null;
+      setFocused(id);
+      if (!openingNode.current && pending.current?.id !== id)
+        pending.current = { id };
+    },
+    [cancelOpening],
+  );
   const bringIntoView = useCallback(
-    (id: string, force = false) => {
-      const position = layout.positions.get(id);
+    (id: string, force = false, opening = false) => {
+      const position = rendered.current.get(id);
       const wrapper = host.current;
       const api = viewport.current;
-      if (!position || !wrapper || !api) return;
-      const { positionX, positionY, scale: zoom } = api.state;
+      if (!position || !wrapper || !api) return Promise.resolve();
+      const { positionX, positionY, scale: zoom } = api.instance.state;
       const width = wrapper.clientWidth;
       const height = wrapper.clientHeight;
       const left = position.x * zoom + positionX;
       const top = position.y * zoom + positionY;
+      const anticipatedWidth = opening ? (compact ? 316 : 576) : position.width;
+      const anticipatedHeight = opening
+        ? Math.min(440, height - 180)
+        : position.height;
       let x = positionX;
       let y = positionY;
-      if (force || left < 24 || left + position.width * zoom > width - 24)
-        x = 32 - position.x * zoom;
-      if (force || top < 64 || top + position.height * zoom > height - 76)
+      if (force || left < 24 || left + anticipatedWidth * zoom > width - 24)
+        x =
+          Math.min(80, Math.max(24, (width - anticipatedWidth * zoom) * 0.18)) -
+          position.x * zoom;
+      if (force || top < 100 || top + anticipatedHeight * zoom > height - 76)
         y =
-          Math.max(76, (height - position.height * zoom) / 2) -
+          Math.max(104, (height - anticipatedHeight * zoom) / 2) -
           position.y * zoom;
-      api.setTransform(x, y, zoom, reduced ? 0 : 280);
+      if (Math.abs(x - positionX) < 1 && Math.abs(y - positionY) < 1)
+        return Promise.resolve();
+      return api.setTransform(x, y, zoom, reduced ? 0 : 360, "easeInOutCubic");
     },
-    [layout, reduced],
+    [compact, reduced],
+  );
+  const reveal = useCallback(
+    async (id: string, heading?: string, ancestors: string[] = []) => {
+      cancelOpening();
+      const request = transition.current;
+      openingNode.current = id;
+      setOpening(id);
+      setFocused(id);
+      await bringIntoView(id, true, true);
+      if (request !== transition.current) return;
+      const position = rendered.current.get(id);
+      const state = viewport.current?.instance.state;
+      if (position && state)
+        expansionAnchor.current = {
+          id,
+          x: position.x * state.scale + state.positionX,
+          y: position.y * state.scale + state.positionY,
+          zoom: state.scale,
+        };
+      openingNode.current = undefined;
+      setOpening(undefined);
+      setExpanded((previous) => new Set([...previous, ...ancestors, id]));
+      pending.current = { id, heading, keyboard: !heading, positioned: true };
+    },
+    [bringIntoView, cancelOpening],
   );
   useEffect(() => {
     const todo = pending.current;
-    if (!todo || !tree.nodes.has(todo.id)) return;
+    if (!todo || openingNode.current || !tree.nodes.has(todo.id)) return;
     const handle = window.setTimeout(
       () => {
-        bringIntoView(todo.id);
+        if (pending.current !== todo) return;
+        if (!todo.positioned) void bringIntoView(todo.id);
         const element = window.document.getElementById(
           `node-${encodeURIComponent(todo.id)}`,
         );
@@ -460,7 +473,7 @@ export function Workspace({
       reduced ? 0 : 290,
     );
     return () => window.clearTimeout(handle);
-  }, [layout, tree, bringIntoView, reduced, focused]);
+  }, [layout, tree, bringIntoView, reduced, focused, opening]);
   useEffect(() => {
     pending.current = { id: root, heading: initialHeading };
   }, [root, initialHeading]);
@@ -490,15 +503,21 @@ export function Workspace({
         );
         return;
       }
-      setExpanded((previous) => {
-        const next = new Set(previous);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        return next;
-      });
-      pending.current = { id, keyboard: true };
+      if (openingNode.current === id) {
+        cancelOpening();
+        return;
+      }
+      if (expanded.has(id)) {
+        cancelOpening();
+        setExpanded((previous) => {
+          const next = new Set(previous);
+          next.delete(id);
+          return next;
+        });
+        pending.current = { id, keyboard: true };
+      } else void reveal(id);
     },
-    [tree],
+    [tree, expanded, reveal, cancelOpening],
   );
   const openFile = useCallback(
     (path: string, heading?: string, fromId?: string) => {
@@ -523,13 +542,29 @@ export function Workspace({
         }
       }
       const id = ids.at(-1)!;
-      setExpanded((previous) => new Set([...previous, ...ids]));
-      setFocused(id);
-      pending.current = { id, heading, keyboard: !heading };
+      if (tree.nodes.has(id)) void reveal(id, heading, ids);
+      else {
+        cancelOpening();
+        // Reveal ancestors first so the destination exists before moving to it.
+        setExpanded((previous) => new Set([...previous, ...ids.slice(0, -1)]));
+        destination.current = { id, heading, ancestors: ids };
+      }
       setFilesOpen(false);
     },
-    [mode, tree, pack, entry],
+    [mode, tree, pack, entry, reveal, cancelOpening],
   );
+  useEffect(() => {
+    const target = destination.current;
+    if (!target || !tree.nodes.has(target.id)) return;
+    const handle = window.setTimeout(
+      () => {
+        destination.current = null;
+        void reveal(target.id, target.heading, target.ancestors);
+      },
+      reduced ? 0 : 280,
+    );
+    return () => window.clearTimeout(handle);
+  }, [tree, reveal, reduced]);
   const [detached, setDetached] = useState<{
     path: string;
     heading?: string;
@@ -670,6 +705,9 @@ export function Workspace({
             ],
           }}
           doubleClick={{ disabled: true }}
+          onPanningStart={cancelOpening}
+          onWheelStart={cancelOpening}
+          onPinchStart={cancelOpening}
           onTransform={(_, state) => setScale(state.scale)}
         >
           <TransformComponent
@@ -684,11 +722,7 @@ export function Workspace({
               aria-label="Learning question tree"
               style={{ width: layout.width, height: layout.height }}
             >
-              <Branches
-                nodes={tree.nodes}
-                positions={positions}
-                focus={focused}
-              />
+              <Branches nodes={tree.nodes} positions={positions} path={path} />
               {[...tree.nodes.values()].map((node) => (
                 <FileNode
                   key={node.id}
@@ -698,6 +732,8 @@ export function Workspace({
                     expanded.has(node.id) && !node.reference && !node.missing
                   }
                   focused={node.id === focused}
+                  onPath={path.has(node.id)}
+                  opening={opening === node.id}
                   position={
                     positions.get(node.id) ?? layout.positions.get(node.id)!
                   }
@@ -727,8 +763,9 @@ export function Workspace({
               title="Return to root"
               aria-label="Return to root"
               onClick={() => {
+                cancelOpening();
                 setFocused(root);
-                bringIntoView(root, true);
+                void bringIntoView(root, true);
               }}
             >
               <Icon name="root" />
@@ -738,7 +775,10 @@ export function Workspace({
               className="icon-button"
               title="Zoom out"
               aria-label="Zoom out"
-              onClick={() => viewport.current?.zoomOut(0.15, reduced ? 0 : 180)}
+              onClick={() => {
+                cancelOpening();
+                void viewport.current?.zoomOut(0.15, reduced ? 0 : 180);
+              }}
             >
               <Icon name="minus" />
             </button>
@@ -747,7 +787,10 @@ export function Workspace({
               className="icon-button"
               title="Zoom in"
               aria-label="Zoom in"
-              onClick={() => viewport.current?.zoomIn(0.15, reduced ? 0 : 180)}
+              onClick={() => {
+                cancelOpening();
+                void viewport.current?.zoomIn(0.15, reduced ? 0 : 180);
+              }}
             >
               <Icon name="plus" />
             </button>
@@ -757,6 +800,7 @@ export function Workspace({
               title="Fit visible branches"
               aria-label="Fit visible branches"
               onClick={() => {
+                cancelOpening();
                 const width = host.current?.clientWidth ?? 900;
                 const height = host.current?.clientHeight ?? 600;
                 const zoom = Math.min(

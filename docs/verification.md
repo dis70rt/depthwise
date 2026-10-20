@@ -59,3 +59,9 @@ The application is ready for local use and a static host. No public deployment, 
 ## Readability follow-up
 
 `tests/readability_browser.py` confirms Atkinson Hyperlegible Next is actually loaded for questions, Markdown, and outline links. Reading text is 18px at 1920×1080 and 1440×900, 17px on a 390px phone viewport, with 16px outline links. Screenshots at 100% scale and the expanded 1080p tree were visually reviewed. The updated two-line assertion measures line height instead of assuming the previous smaller font size. The production acceptance suite and 16 unit tests pass with the new font and wider previews.
+
+## Curved branch update
+
+The production build and 18 unit tests pass. The browser acceptance suite passes at 1440, 768, and 390px, including collapse/reopen, keyboard traversal, Markdown links, and reduced motion. `tests/branches_browser.py` records actual animation frames: expansion began at 378ms after 24 collapsed frames during the canvas move; the reached question stayed anchored during relayout. It checks exact ancestor highlighting, interruption by newer clicks, and reduced motion. Desktop and phone screenshots were reviewed. The Taste inspector reported zero failures and one warning: it classifies the initially unfocused connections as a chart without colored data; the active route intentionally receives blue only after a child is focused.
+
+The user requested no duplicate focus outline within a highlighted node, and asked to review before committing. The updated UI remains uncommitted.
