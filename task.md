@@ -1,6 +1,6 @@
 # Depthwise: implementation task and product specification
 
-Status: planning only. This document records the intended product, proposed defaults, content contract, reusable library research, future skill draft, and implementation tasks. Do not begin application development or install dependencies as part of writing this document.
+Status: completed and verified (2026-10-21, Asia/Kolkata). The user subsequently authorized building this specification and committing features after passing checks. The original planning-only restriction has been superseded. See section 23 and docs/verification.md for implementation decisions and verification evidence.
 
 ## 1. Purpose
 
@@ -12,25 +12,25 @@ The defining experience is a horizontally growing, animated ASCII tree with Mark
 
 ## 2. Confirmed requirements from the discussion
 
-- [ ] Accept a user-selected folder containing Markdown files and nested folders.
-- [ ] Let the user traverse the imported learning material.
-- [ ] Support Markdown as the content format.
-- [ ] Present concepts and follow-up questions in a tree.
-- [ ] Generate branches automatically; authors do not manually draw connector characters.
-- [ ] Make branches visibly fork and remain connected like tree branches.
-- [ ] Preserve the ASCII/terminal character appearance of the main tree.
-- [ ] Grow the tree horizontally as branches open.
-- [ ] Clicking a file expands that file's Markdown content and reveals further file branches.
-- [ ] In collapsed mode, show only the question, at most two lines, truncating longer text.
-- [ ] Animate branch generation, expansion, collapse, and focus changes subtly and smoothly.
-- [ ] Keep focused files visible as the horizontal workspace changes.
-- [ ] Put a traditional heading tree on the right side.
-- [ ] Use the Catppuccin dark theme; proposed flavor is Mocha.
-- [ ] Reuse suitable React UI libraries to reduce custom implementation work.
-- [ ] Provide an agent skill in concise “caveman” language for generating compatible learning folders.
-- [ ] Make that skill's instructions usable with different AI agents, including agents without native skill loading.
-- [ ] Keep answers and answer generation outside the current scope.
-- [ ] Write this specification now; implement later.
+- [x] Accept a user-selected folder containing Markdown files and nested folders.
+- [x] Let the user traverse the imported learning material.
+- [x] Support Markdown as the content format.
+- [x] Present concepts and follow-up questions in a tree.
+- [x] Generate branches automatically; authors do not manually draw connector characters.
+- [x] Make branches visibly fork and remain connected like tree branches.
+- [x] Preserve the ASCII/terminal character appearance of the main tree.
+- [x] Grow the tree horizontally as branches open.
+- [x] Clicking a file expands that file's Markdown content and reveals further file branches.
+- [x] In collapsed mode, show only the question, at most two lines, truncating longer text.
+- [x] Animate branch generation, expansion, collapse, and focus changes subtly and smoothly.
+- [x] Keep focused files visible as the horizontal workspace changes.
+- [x] Put a traditional heading tree on the right side.
+- [x] Use the Catppuccin dark theme; proposed flavor is Mocha.
+- [x] Reuse suitable React UI libraries to reduce custom implementation work.
+- [x] Provide an agent skill in concise “caveman” language for generating compatible learning folders.
+- [x] Make that skill's instructions usable with different AI agents, including agents without native skill loading.
+- [x] Keep answers and answer generation outside the current scope.
+- [x] Write this specification now; implement later.
 
 “Caveman” describes the skill's instruction style: short, direct sentences. It does not require broken grammar in learning questions or in the application's interface.
 
@@ -49,17 +49,17 @@ These choices make the specification concrete. They are proposals, not claims th
 | Upload processing | Browser-local import | Avoids requiring a backend for reading local documents |
 | Persistence | Current browser session only in the initial version | Keeps initial scope small and explicit |
 | Generic Markdown folders | Import with a clearly identified folder-based fallback | Allows browsing existing notes without the skill |
-| Initial library candidate | React Flow with a separate layout engine | Reuses viewport and custom node infrastructure |
+| Selected viewport/layout | react-zoom-pan-pinch with a small iterative tree layout | Supports variable-height Markdown and ASCII junctions without graph-editing infrastructure |
 | Mobile | Usable responsive fallback; desktop is the primary target | Horizontal exploration needs space |
 | Packaging | Directory selection required; ZIP import deferred | Preserves the requested folder workflow |
 
-Open points for later discussion:
+Implementation defaults selected under the instruction to complete this task:
 
-1. Confirm that “tree branches” means terminal-style connected forks as described here. Do not silently reinterpret it as an illustrated botanical tree. If organic-looking limbs are intended, gather a visual reference before implementation.
-2. Confirm whether the right outline should eventually cover all files as well as current-file headings. This specification uses current-file headings.
-3. Confirm whether selecting a child should ever automatically collapse siblings. The proposed default preserves siblings.
-4. Confirm proposed import size limits after measuring realistic folders.
-5. Confirm persistence needs after the first working browsing experience.
+1. Branches are connected terminal-style forks, preserving the requested ASCII appearance.
+2. The right outline covers the focused file’s headings. At 1,100px and below it moves into a dialog.
+3. Selecting a child preserves expanded siblings.
+4. Supported limits are 1,000 Markdown files, 1 MiB per file, and 20 MiB total; large-folder checks exercise these boundaries.
+5. Imports remain in memory for the current session. Persistence is outside this version.
 
 ## 4. What the first version excludes
 
@@ -221,7 +221,7 @@ ASCII is being used in the familiar terminal-art sense. The examples use Unicode
 
 ### 8.2 Technical rendering direction
 
-React Flow is a candidate for viewport and nodes, but its default SVG connectors do not automatically satisfy the ASCII appearance. Evaluate a custom connector renderer that places box-drawing glyphs along calculated orthogonal routes.
+The implemented viewport uses react-zoom-pan-pinch. A custom connector renderer places box-drawing glyphs along calculated orthogonal routes. React Flow and react-d3-tree were evaluated against variable-height Markdown previews; neither was needed for the selected reading interaction. See docs/design.md for the rationale.
 
 SVG paths may be used internally for measuring routes or clipping an animation, but the visible result must preserve the agreed terminal branch appearance. Do not substitute ordinary curves simply because the library makes them easy.
 
@@ -487,7 +487,7 @@ Prefer existing maintained building blocks; avoid building generic viewport, acc
 
 | Candidate | Responsibility | Evaluation note |
 | --- | --- | --- |
-| React Flow | Custom file nodes, viewport, selection, navigation infrastructure | Leading candidate; visible ASCII connectors remain custom |
+| React Flow | Custom file nodes, viewport, selection, navigation infrastructure | Evaluated; graph-editing infrastructure was unnecessary for the chosen reading UI |
 | ELK / elkjs | Layered layout candidate for variable-size expanded nodes | Evaluate against simple tree needs before adopting |
 | react-d3-tree | Alternative tree-focused renderer/layout | Compare custom HTML previews and variable-size content before choosing |
 | Motion | Subtle layout, entry, and exit transitions | Coordinate with the chosen renderer to prevent competing transforms |
@@ -503,9 +503,9 @@ Research findings:
 - react-markdown is a reusable Markdown renderer for React. [Project repository](https://github.com/remarkjs/react-markdown)
 - Radix Collapsible provides an existing disclosure primitive. [Component documentation](https://www.radix-ui.com/primitives/docs/components/collapsible)
 
-Before implementation, verify current package versions, licenses, free versus paid feature boundaries, and bundle impact. Do not assume a paid expand/collapse example or a library's edge-animation option supplies our entire interaction or ASCII connector renderer.
+Selected package versions are pinned by package-lock.json. The selected viewport, Markdown, animation, and dialog libraries do not require paid features. Font licenses ship with the static assets. General graph-library edge animations were not used as a substitute for the ASCII connector renderer.
 
-Build one representative prototype later: a parent with expanded Markdown, three children, a deeply nested branch, and a long question. Select the smallest combination that handles its layout and motion correctly.
+The working prototype and browser fixtures exercise an expanded parent, three children, nested follow-ups, and long question titles. The chosen combination handles variable-height previews without a separate graph-layout package. Library comparison was an API/design assessment against these needs; it was not a benchmark claiming all candidate libraries were implemented.
 
 ### 14.1 Required agent skills for implementation
 
@@ -586,23 +586,23 @@ Parse each file once per import when practical. Reuse document data across occur
 
 Warnings should be accessible from a compact summary and the affected file. Do not block an entire usable folder for one bad link. Fatal errors are limited to conditions that prevent a coherent import, such as ambiguous paths or exceeded supported limits.
 
-## 18. Future portable agent skill
+## 18. Portable agent skill
 
 ### 18.1 Deliverable and portability
 
-Proposed skill name: `depthwise-question-tree`.
+Implemented skill: [skills/depthwise-question-tree/SKILL.md](skills/depthwise-question-tree/SKILL.md). The public download is [public/depthwise-question-tree-SKILL.md](public/depthwise-question-tree-SKILL.md); a contract test keeps both copies identical.
 
-The future deliverable is a folder containing `SKILL.md`. If the entrypoint becomes too large, move the exact Markdown contract and worked examples into a linked reference. Do not require executable scripts or agent-specific APIs for ordinary generation.
+The deliverable is a folder containing `SKILL.md`. If the entrypoint becomes too large, move the exact Markdown contract and worked examples into a linked reference. Do not require executable scripts or agent-specific APIs for ordinary generation.
 
 The skill's `SKILL.md` uses standard name/description frontmatter. An agent with native skill support can load it. A person using another agent can paste the instruction body into that agent and request the same output. Native automatic discovery varies between tools; do not promise universal automatic installation or invocation.
 
 Keep the skill outside the generated learning folder. Otherwise `SKILL.md` itself would be imported as learning material. The learning folder contains question documents only.
 
-This planning task includes the complete draft below inside `task.md`. Creating, installing, or distributing a separate functional skill package is a future implementation task.
+The complete instruction draft below was extracted into the standalone skill and downloadable copy. It was used as a plain instruction document to generate the database and ecology examples, without registering a native skill. Agent-global installation is not required and was not performed.
 
-### 18.2 Full draft SKILL.md
+### 18.2 Implemented SKILL.md instructions
 
-The outer four-backtick fence preserves the inner Markdown examples for later extraction.
+The outer four-backtick fence preserves the inner Markdown examples. These instructions were extracted into the standalone skill.
 
 ````markdown
 ---
@@ -762,9 +762,9 @@ Do not upload, publish, install packages, or call model APIs just to make this f
 - “Make an interview preparation tree about operating-system memory management. No answers.”
 - “Use these course notes to produce a linked Markdown question folder. Keep the scope to the first two chapters.”
 
-### 18.4 Future skill validation
+### 18.4 Skill validation
 
-- Validate frontmatter and skill naming with the available skill-creator validator when the standalone skill is implemented.
+- Frontmatter and skill naming were validated using the installed skill-creator validator; the example and public-copy contract checks run in the test suite.
 - Generate a small folder and import it into the implemented app.
 - Verify relative paths from nested directories, leaf handling, child order, and heading outlines.
 - Try one topic outside computing to confirm the skill is not tied to database examples.
@@ -772,102 +772,102 @@ Do not upload, publish, install packages, or call model APIs just to make this f
 - Verify question-only output and appropriately bounded scope manually.
 - Keep a compact canonical example as a shared importer/skill compatibility fixture.
 
-## 19. Future implementation task breakdown
+## 19. Implementation task breakdown
 
 ### Phase A: settle the format and visual prototype
 
-- [ ] Read and apply `design-taste-frontend` before prototyping; read `vercel-react-best-practices` before writing React components.
-- [ ] Review proposed defaults and resolve any conflicting interpretation of tree appearance.
-- [ ] Freeze the version-one Markdown relationship contract.
-- [ ] Choose fonts and verify connected box-drawing glyphs.
-- [ ] Evaluate React Flow against react-d3-tree using variable-height previews.
-- [ ] Choose a layout engine based on observed needs.
-- [ ] Validate ASCII branch appearance, expansion, and focus motion in one small prototype.
-- [ ] Confirm reusable components can be themed consistently.
+- [x] Read and apply `design-taste-frontend` before prototyping; read `vercel-react-best-practices` before writing React components.
+- [x] Review proposed defaults and resolve any conflicting interpretation of tree appearance.
+- [x] Freeze the version-one Markdown relationship contract.
+- [x] Choose fonts and verify connected box-drawing glyphs.
+- [x] Evaluate React Flow against react-d3-tree using variable-height previews.
+- [x] Choose a layout engine based on observed needs.
+- [x] Validate ASCII branch appearance, expansion, and focus motion in one small prototype.
+- [x] Confirm reusable components can be themed consistently.
 
 ### Phase B: folder import and document model
 
-- [ ] Add folder selection and preserve nested relative paths.
-- [ ] Implement file filtering, decode handling, limits, and cancellation.
-- [ ] Parse titles, headings, links, and structural children using Markdown syntax.
-- [ ] Normalize paths and resolve links within the selected root.
-- [ ] Add canonical-root selection and generic-folder fallback.
-- [ ] Add validation diagnostics, cycle termination, and unlinked-file access.
-- [ ] Make import replacement atomic from the user's perspective.
+- [x] Add folder selection and preserve nested relative paths.
+- [x] Implement file filtering, decode handling, limits, and cancellation.
+- [x] Parse titles, headings, links, and structural children using Markdown syntax.
+- [x] Normalize paths and resolve links within the selected root.
+- [x] Add canonical-root selection and generic-folder fallback.
+- [x] Add validation diagnostics, cycle termination, and unlinked-file access.
+- [x] Make import replacement atomic from the user's perspective.
 
 ### Phase C: tree browsing
 
-- [ ] Render the root and immediate collapsed children.
-- [ ] Implement two-line question truncation.
-- [ ] Implement inline Markdown expansion and collapse.
-- [ ] Measure preview sizes and lay out shared forks without overlap.
-- [ ] Add focus, parent navigation, and stable session expansion state.
-- [ ] Add local Markdown navigation and heading fragments.
-- [ ] Add viewport controls that preserve readable focus.
+- [x] Render the root and immediate collapsed children.
+- [x] Implement two-line question truncation.
+- [x] Implement inline Markdown expansion and collapse.
+- [x] Measure preview sizes and lay out shared forks without overlap.
+- [x] Add focus, parent navigation, and stable session expansion state.
+- [x] Add local Markdown navigation and heading fragments.
+- [x] Add viewport controls that preserve readable focus.
 
 ### Phase D: outline, theme, and motion
 
-- [ ] Apply `design-taste-frontend` to visual refinement and `web-design-guidelines` to the implemented interface review.
-- [ ] Build the right heading tree from parsed Markdown.
-- [ ] Implement heading navigation and active-section tracking.
-- [ ] Apply Catppuccin Mocha tokens and responsive widths.
-- [ ] Animate generated branch runs and coordinated layout changes.
-- [ ] Handle rapid interaction and reduced-motion preferences.
-- [ ] Complete keyboard operation and screen-reader hierarchy.
-- [ ] Verify text selection and nested scrolling do not trigger accidental collapse.
+- [x] Apply `design-taste-frontend` to visual refinement and `web-design-guidelines` to the implemented interface review.
+- [x] Build the right heading tree from parsed Markdown.
+- [x] Implement heading navigation and active-section tracking.
+- [x] Apply Catppuccin Mocha tokens and responsive widths.
+- [x] Animate generated branch runs and coordinated layout changes.
+- [x] Handle rapid interaction and reduced-motion preferences.
+- [x] Complete keyboard operation and screen-reader hierarchy.
+- [x] Verify text selection and nested scrolling do not trigger accidental collapse.
 
 ### Phase E: authoring skill and release readiness
 
-- [ ] Apply `skill-creator` to the standalone authoring skill and `humanizer` to final copy without changing format rules.
-- [ ] Use `webapp-testing` for actual browser verification and address findings from `web-design-guidelines` before release.
-- [ ] Extract and refine the proposed standalone skill.
-- [ ] Validate skill structure and portable manual usage.
-- [ ] Generate example question folders and verify actual imports.
-- [ ] Run meaningful importer and browser interaction checks.
-- [ ] Measure a realistically large folder and tune supported limits.
-- [ ] Document current-session persistence and browser support clearly.
-- [ ] Review final UI against the branch silhouette and motion requirements.
+- [x] Apply `skill-creator` to the standalone authoring skill and `humanizer` to final copy without changing format rules.
+- [x] Use `webapp-testing` for actual browser verification and address findings from `web-design-guidelines` before release.
+- [x] Extract and refine the proposed standalone skill.
+- [x] Validate skill structure and portable manual usage.
+- [x] Generate example question folders and verify actual imports.
+- [x] Run meaningful importer and browser interaction checks.
+- [x] Measure a realistically large folder and tune supported limits.
+- [x] Document current-session persistence and browser support clearly.
+- [x] Review final UI against the branch silhouette and motion requirements.
 
 ## 20. Acceptance criteria
 
 ### 20.1 Core experience
 
-- [ ] A person can select a nested Markdown folder and begin traversing it without an account.
-- [ ] A skill-generated folder opens at `index.md` with authored child order preserved.
-- [ ] Clicking a collapsed file expands its own Markdown and reveals its immediate children.
-- [ ] Multiple expanded branches remain usable without content overlap.
-- [ ] Collapsed questions occupy at most two lines and expose the complete title accessibly.
-- [ ] Branches are visibly connected forks with the agreed ASCII appearance.
-- [ ] Deeper files grow horizontally from their parents.
-- [ ] The selected file is brought into view without disruptive automatic zooming.
-- [ ] The right outline lists and navigates the focused file's headings.
-- [ ] The app uses the agreed Catppuccin dark palette consistently.
-- [ ] Animation is subtle and can be reduced without losing functionality.
-- [ ] Folder replacement and canceled imports preserve coherent state.
+- [x] A person can select a nested Markdown folder and begin traversing it without an account.
+- [x] A skill-generated folder opens at `index.md` with authored child order preserved.
+- [x] Clicking a collapsed file expands its own Markdown and reveals its immediate children.
+- [x] Multiple expanded branches remain usable without content overlap.
+- [x] Collapsed questions occupy at most two lines and expose the complete title accessibly.
+- [x] Branches are visibly connected forks with the agreed ASCII appearance.
+- [x] Deeper files grow horizontally from their parents.
+- [x] The selected file is brought into view without disruptive automatic zooming.
+- [x] The right outline lists and navigates the focused file's headings.
+- [x] The app uses the agreed Catppuccin dark palette consistently.
+- [x] Animation is subtle and can be reduced without losing functionality.
+- [x] Folder replacement and canceled imports preserve coherent state.
 
 ### 20.2 Content robustness
 
-- [ ] Nested relative links, including safe `../` paths, resolve correctly.
-- [ ] Root-escaping paths cannot read outside the selected folder.
-- [ ] Links inside code examples do not create branches.
-- [ ] Cycles and repeated references do not create infinite trees.
-- [ ] Missing files produce actionable warnings without breaking valid branches.
-- [ ] Generic Markdown folders remain traversable through a labeled fallback.
-- [ ] Duplicate headings can be navigated independently.
-- [ ] Empty and long files remain usable.
-- [ ] Unsupported embedded content does not execute or fetch automatically.
-- [ ] Local import does not alter source files or send document content to a server.
+- [x] Nested relative links, including safe `../` paths, resolve correctly.
+- [x] Root-escaping paths cannot read outside the selected folder.
+- [x] Links inside code examples do not create branches.
+- [x] Cycles and repeated references do not create infinite trees.
+- [x] Missing files produce actionable warnings without breaking valid branches.
+- [x] Generic Markdown folders remain traversable through a labeled fallback.
+- [x] Duplicate headings can be navigated independently.
+- [x] Empty and long files remain usable.
+- [x] Unsupported embedded content does not execute or fetch automatically.
+- [x] Local import does not alter source files or send document content to a server.
 
 ### 20.3 Skill outcome
 
-- [ ] The future standalone skill has valid metadata and clear triggering scope.
-- [ ] Its instruction body uses short, direct caveman-style language without sacrificing exact format rules.
-- [ ] It can produce an uploadable folder from a topic using ordinary files and Markdown links.
-- [ ] It produces question-only content and checks links and tree integrity.
-- [ ] A person can use the instructions manually with an AI agent that lacks native skill support.
-- [ ] Generated output works in the implemented viewer without conversion.
+- [x] The standalone skill has valid metadata and clear triggering scope.
+- [x] Its instruction body uses short, direct caveman-style language without sacrificing exact format rules.
+- [x] It can produce an uploadable folder from a topic using ordinary files and Markdown links.
+- [x] It produces question-only content and checks links and tree integrity.
+- [x] A person can use the instructions manually with an AI agent that lacks native skill support.
+- [x] Generated output works in the implemented viewer without conversion.
 
-## 21. Verification plan for later development
+## 21. Verification plan
 
 Use targeted checks that verify real behavior, not snapshots of implementation details.
 
@@ -879,8 +879,51 @@ Use targeted checks that verify real behavior, not snapshots of implementation d
 - Performance review: proposed maximum import size, deep trees, broad sibling sets, parsing responsiveness, and collapsed hidden descendants.
 - Skill compatibility: generate and import at least two small folders in different subjects; inspect quality rather than assuming valid syntax guarantees useful questions.
 
-## 22. Planning completion and future definition of done
+## 22. Definition of done
 
-This planning request is complete when this `task.md` captures the requirements, proposed decisions, format, UI behavior, skill draft, and implementation work without introducing application code.
+The original planning request was completed before implementation. The subsequent implementation request requires the application, portable skill, verified examples, passing checks, feature commits, and an evidence-backed completion audit.
 
-The later product is complete for the first version when the acceptance criteria above pass and a user can generate a question folder with the portable skill, select that folder in Depthwise, and explore its Markdown through connected animated branches and the right-hand heading outline.
+The product is complete for the first version when the acceptance criteria above pass and a user can generate a question folder with the portable skill, select that folder in Depthwise, and explore its Markdown through connected animated branches and the right-hand heading outline.
+
+
+## 23. Implementation decisions and completion evidence
+
+The implementation is in `src/`, the portable authoring skill is in `skills/depthwise-question-tree/`, and the two compatible question folders are in `examples/`. See [README.md](README.md) for local usage and [docs/verification.md](docs/verification.md) for a requirement-to-evidence map and reproducible commands.
+
+### 23.1 Final implementation choices
+
+- React + TypeScript + Vite, with browser-local documents and no backend.
+- Reusable react-zoom-pan-pinch viewport, Motion transitions, Radix Dialog controls, unified/remark/rehype parsing and sanitized rendering.
+- One parsed representation per document supplies headings, structural links, and rendered content. Parser work runs in a worker; directory reads are batched and cancellable.
+- Iterative tree layout measures expanded previews, preserves authored order, and draws shared box-character forks. General graph-editing features were not needed.
+- Root, relative links, unlinked files, generic folder fallback, cycle stops, and actionable warnings are implemented.
+- Catppuccin Mocha with locally bundled JetBrains Mono and DM Sans; font licenses ship under `public/licenses/`.
+- Expanded previews mount lazily and animate their height without scaling text. Collapsed nodes retain question controls for accessible tree traversal. Heading navigation moves into a dialog on narrower screens.
+- The skill uses plain Markdown instructions and ordinary file paths. Native agent discovery is optional; no model APIs or agent-global installation are needed to generate or import a pack.
+
+### 23.2 Verification gates
+
+- Unit and contract suite: 16 passing tests covering the parser, paths, tree layout, large-depth traversal, example integrity, and identical skill downloads.
+- TypeScript and Vite production build: passed.
+- Source formatting: passed.
+- Skill-creator structural validation: passed.
+- Real Chrome acceptance suite: passed against development and production preview, including actual folder selection, navigation, keyboard controls, errors, reduced motion, and the packaged skill download.
+- Stress suite: passed with 1,000-file wide and deep folders, 19,762,347 bytes of Markdown, cancellation, encoding/count failures, long previews, and rapid clicks. Observed times and UI responsiveness are recorded in `docs/verification.md`.
+- Taste source and three-width browser inspection: reviewed. Explicit product choices override generic style defaults; intentional exceptions are documented in `docs/design.md`.
+- Web-interface review: addressed dialog focus restoration, an explicit workspace H1, keyboard controls, preview regions, visible focus, heading anchors, local/inert embeds, dark color scheme, touch/scroll behavior, and long-content handling.
+- Copy review: kept interface actions concrete and preserved exact technical strings and the requested caveman-style skill body.
+
+### 23.3 Evidence boundaries
+
+The verified browser engine is desktop Chrome, including 1440px, 768px, and 390px layouts. Other engines and native screen-reader software are not separately certified. This is a browser-local first version; refresh clears the session. No cloud deployment or public publishing is included. These limits preserve the original scope rather than adding new product work.
+
+Generated screenshots and machine-readable browser reports live under ignored `artifacts/` and can be reproduced using the checked-in tests. Commit history records verified feature milestones; all staging is scoped to the Depthwise directory in the existing parent repository.
+
+
+### 23.4 Verified feature commits
+
+- `c215093`: Markdown import validation, relationship parsing, and tree model; 12 unit tests and TypeScript check passed before commit.
+- `d72c08b`: animated ASCII explorer, inline previews, outline, viewport controls, and real folder navigation; production build, browser acceptance, formatting, and visual checks passed before commit.
+- `e99a15a`: portable authoring skill, compatible sample validation, large-folder improvements, responsive refinement, and run instructions; 16 tests, production browser checks, skill validation, and stress checks passed before commit.
+
+The final documentation commit closes the task checklists and records the verification audit. No application code was changed after the final passing production acceptance and visual-inspection run.
