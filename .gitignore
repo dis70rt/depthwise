@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.taste-skill/
+artifacts/
+.venv/
+__pycache__/
