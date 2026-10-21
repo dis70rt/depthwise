@@ -6,10 +6,10 @@ The instructions use short caveman-style language. Generated learning questions 
 
 ## Install
 
-After publishing this repository to GitHub, replace `YOUR_GITHUB_USER/YOUR_REPOSITORY` with its actual owner and repository name:
+After pushing the project repository to GitHub, install the skill with:
 
 ```sh
-npx skills add YOUR_GITHUB_USER/YOUR_REPOSITORY --skill depthwise-question-tree
+npx skills add dis70rt/depthwise --skill depthwise-question-tree
 ```
 
 Choose your agent when prompted. The repository layout is:

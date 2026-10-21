@@ -18,7 +18,7 @@ with sync_playwright() as p:
     figure=page.locator('.landing-tree')
     expect(figure).to_be_visible()
     intro=page.locator('.empty-intro').bounding_box()
-    tree=figure.bounding_box()
+    tree=page.locator('.landing-preview').bounding_box()
     assert tree['x'] > intro['x']+intro['width']+20
     assert abs(tree['y']+tree['height']/2-intro['y']-intro['height']/2)<2
     expect(figure.get_by_role('button')).to_have_count(0)

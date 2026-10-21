@@ -1025,3 +1025,12 @@ This replaces the earlier question-only restriction. The skill is general: topic
 - [x] Reserve space for bottom controls and status, including safe-area insets. Cap expanded card height and scroll its Markdown body.
 - [x] Use actual available canvas dimensions for focus and fit-view.
 - [x] Check header placement and focused-card clearance at 1920, 1440, 1280, 768, and 390px, including a long document at 720px viewport height.
+
+### 23.15 Project-style landing and copyable installation
+
+- [x] Add project, skill, and GitHub navigation using the supplied dis70rt/depthwise repository.
+- [x] Add a click-to-copy skills CLI command and a separate reusable prompt block with success feedback and manual-copy fallback.
+- [x] Place installation in the left hero column below the main actions; keep the animated tree on the right.
+- [x] Use a compact dashed folder drop button with clear drag-and-drop or click-to-browse instructions and subtle drag feedback. Keep “Or explore an example tree →” below the button, and limit the left-side install block to 420px.
+- [x] Add scroll sections explaining the website, ordinary Markdown, the skill file, and the topic-to-folder-to-tree workflow. Keep direct download and folder-format access.
+- [x] Respect reduced motion, preserve local folder import, and keep the main canvas unchanged.

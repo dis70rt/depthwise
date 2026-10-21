@@ -157,16 +157,19 @@ h3 {
 }
 .main-empty {
   overflow: auto;
+  scroll-behavior: smooth;
+  scroll-padding-top: 32px;
 }
 .empty-layout {
-  min-height: 100%;
+  min-height: calc(100dvh - 76px);
   display: grid;
+  align-content: start;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto;
   align-items: center;
   column-gap: clamp(32px, 5vw, 80px);
-  row-gap: 56px;
-  padding: clamp(48px, 8vh, 80px) clamp(24px, 6vw, 112px) 0;
+  row-gap: 36px;
+  padding: 48px clamp(24px, 6vw, 112px) 32px;
 }
 .empty-intro {
   min-width: 0;
@@ -195,11 +198,11 @@ h3 {
   color: var(--accent);
 }
 .empty-description {
-  font-size: 16px;
-  line-height: 1.9;
+  font-size: 18px;
+  line-height: 1.7;
   color: var(--muted);
-  margin-top: 22px;
-  margin-bottom: 28px;
+  margin-top: 20px;
+  margin-bottom: 24px;
 }
 .primary-button {
   display: inline-flex;
@@ -222,37 +225,69 @@ h3 {
   margin-left: 24px;
 }
 .folder-dropzone {
-  width: min(100%, 460px);
-  padding: 24px;
-  border: 1px dashed #6c7086;
-  border-radius: 14px;
-  background: #242436;
-  transition:
-    border-color 180ms ease,
-    background-color 180ms ease;
+  width: min(100%, 420px);
 }
-.folder-dropzone.drop-active {
-  border-color: var(--blue);
-  border-style: solid;
-  background: #29354c;
-}
-.dropzone-heading {
+.folder-import-button {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 20px;
-  line-height: 1.4;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: transparent;
   color: var(--text);
+  text-align: left;
+  transition:
+    border-color 240ms ease,
+    background 240ms ease;
 }
-.dropzone-heading svg {
-  color: var(--blue);
+.folder-import-button > svg {
   flex-shrink: 0;
+  color: var(--muted);
+  transition:
+    transform 260ms ease,
+    color 240ms ease;
+}
+.folder-import-button:hover,
+.drop-active .folder-import-button {
+  border-color: var(--muted);
+  background: rgb(137 180 250 / 4%);
+}
+.folder-import-button:hover > svg {
+  color: var(--blue);
+  transform: translateY(-2px);
+}
+.drop-active .folder-import-button > svg {
+  color: var(--blue);
+  animation: folder-drag-float 1.6s ease-in-out infinite;
+}
+@keyframes folder-drag-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+.folder-import-copy {
+  display: grid;
+  gap: 4px;
+}
+.dropzone-heading {
+  font-size: 17px;
+  line-height: 1.4;
 }
 .dropzone-note {
-  margin: 10px 0 20px;
-  color: var(--muted);
+  color: var(--subtle);
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.5;
+}
+.browse-label {
+  color: var(--blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .example-button {
   display: block;
@@ -279,6 +314,20 @@ h3 {
   background: #a6e3a1;
   border-radius: 50%;
   flex-shrink: 0;
+}
+.landing-preview {
+  min-width: 0;
+  width: 100%;
+  max-width: 760px;
+  justify-self: center;
+  align-self: center;
+}
+.landing-install {
+  width: min(100%, 420px);
+  margin-top: 32px;
+}
+.landing-install .install-note {
+  margin-bottom: 0;
 }
 .landing-tree {
   margin: 0;
@@ -1488,6 +1537,7 @@ h3 {
     padding-top: 56px;
     row-gap: 48px;
   }
+  .landing-preview,
   .landing-tree {
     max-width: 680px;
   }
@@ -1750,4 +1800,357 @@ h3 {
     padding-left: max(18px, env(safe-area-inset-left));
     padding-right: max(18px, env(safe-area-inset-right));
   }
+}
+
+/* Project landing page: same reading face and palette, with real source and install actions. */
+.landing-nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 28px;
+  flex: 1;
+  font-size: 15px;
+}
+.landing-nav a {
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.landing-nav a:hover {
+  color: var(--text);
+}
+.app-header-landing .header-actions {
+  margin-left: 10px;
+}
+.copy-section {
+  min-width: 0;
+}
+.copy-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 15px;
+  color: var(--muted);
+}
+.copy-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: 100%;
+  min-height: 64px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--crust);
+  text-align: left;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+.copy-block:hover {
+  border-color: var(--blue);
+}
+.copy-block code {
+  min-width: 0;
+  font: 14px/1.7 var(--mono);
+  color: var(--text);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.copy-action {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.copy-done {
+  border-color: #a6e3a1;
+}
+.copy-done .copy-action {
+  color: #a6e3a1;
+}
+.copy-feedback {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.install-note {
+  margin: 10px 0 24px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--subtle);
+}
+.landing-scroll-link {
+  grid-column: 1 / -1;
+  justify-self: center;
+  margin-top: clamp(32px, 5vh, 64px);
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px;
+  font-size: 15px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.landing-doc-section {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 56px clamp(32px, 5vw, 80px);
+  padding: 96px clamp(24px, 6vw, 112px);
+  scroll-margin-top: 24px;
+}
+.landing-explanation {
+  min-width: 0;
+  max-width: 620px;
+}
+.landing-explanation h2 {
+  max-width: 16ch;
+  font-size: clamp(30px, 3vw, 44px);
+  font-weight: 450;
+  line-height: 1.15;
+  letter-spacing: -1.3px;
+  margin-bottom: 24px;
+}
+.landing-explanation > p,
+.skill-prompt > p {
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.75;
+  margin: 0 0 18px;
+}
+.landing-explanation code {
+  font: 16px var(--mono);
+  color: var(--text);
+}
+.project-details {
+  margin: 28px 0;
+}
+.project-details > div + div {
+  margin-top: 24px;
+}
+.project-details dt {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.project-details dd {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.text-link {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 16px;
+  color: var(--blue);
+  text-decoration: none;
+}
+.text-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+.markdown-source {
+  min-width: 0;
+  align-self: start;
+  background: var(--mantle);
+  border: 1px solid var(--surface);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.source-caption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 22px;
+  color: var(--subtle);
+  font-size: 14px;
+  border-bottom: 1px solid var(--surface);
+}
+.source-caption svg {
+  flex-shrink: 0;
+}
+.source-caption span:first-of-type {
+  overflow-wrap: anywhere;
+}
+.source-caption span:last-child {
+  margin-left: auto;
+}
+.markdown-source pre {
+  margin: 0;
+  padding: 24px 22px;
+  overflow: auto;
+  font: 15px/1.85 var(--mono);
+  color: var(--text);
+}
+.landing-workflow {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 40px;
+  margin: 0;
+  padding-left: 22px;
+}
+.landing-workflow li {
+  padding-left: 8px;
+}
+.landing-workflow li::marker {
+  color: var(--blue);
+  font-size: 17px;
+}
+.landing-workflow h3 {
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.landing-workflow p {
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--muted);
+  max-width: 34ch;
+}
+.skill-explanation {
+  background: var(--mantle);
+  align-items: center;
+}
+.skill-prompt {
+  min-width: 0;
+}
+.skill-prompt .copy-block {
+  align-items: flex-start;
+  padding: 22px;
+}
+.skill-prompt .copy-block code {
+  font: 17px/1.8 var(--reading-font);
+}
+.skill-prompt > p {
+  font-size: 15px;
+  margin: 16px 0 24px;
+}
+.landing-explanation .skill-download-note {
+  font-size: 15px;
+  margin-top: 12px;
+}
+.landing-footer {
+  padding: 26px clamp(24px, 6vw, 112px);
+  font-family: var(--reading-font);
+  border-top: none;
+}
+@media (max-width: 1100px) {
+  .landing-doc-section {
+    gap: 40px;
+  }
+  .empty-layout {
+    min-height: auto;
+    padding-bottom: 48px;
+  }
+  .landing-scroll-link {
+    grid-column: 1;
+  }
+}
+@media (max-width: 759px) {
+  .app-header-landing .header-actions {
+    display: none;
+  }
+  .landing-nav {
+    gap: 12px;
+    font-size: 15px;
+  }
+  .landing-nav a[href^="#"] {
+    display: none;
+  }
+  .empty-layout {
+    padding-top: 36px;
+    row-gap: 32px;
+  }
+  .empty-intro {
+    max-width: none;
+  }
+  .copy-block {
+    gap: 12px;
+    padding: 14px;
+  }
+  .copy-action span {
+    display: none;
+  }
+  .copy-block code {
+    font-size: 14px;
+  }
+  .dropzone-heading {
+    font-size: 16px;
+  }
+  .privacy-note {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-top: 20px;
+  }
+  .landing-scroll-link {
+    padding-inline: 0;
+    gap: 10px;
+    font-size: 14px;
+  }
+  .landing-doc-section {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 64px 24px;
+    gap: 32px;
+  }
+  .landing-explanation h2 {
+    font-size: 34px;
+    max-width: 15ch;
+  }
+  .landing-explanation > p {
+    font-size: 17px;
+  }
+  .landing-workflow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    margin-top: 8px;
+  }
+  .source-caption {
+    padding: 16px;
+    gap: 8px;
+  }
+  .source-caption span:last-child {
+    display: none;
+  }
+  .markdown-source pre {
+    padding: 20px 16px;
+    font-size: 14px;
+  }
+  .skill-prompt .copy-block {
+    padding: 18px;
+  }
+  .landing-footer {
+    gap: 20px;
+    padding: 28px 24px;
+  }
+}
+
+.skill-info-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--subtle);
+  transition:
+    color 180ms ease,
+    background 180ms ease;
+}
+.skill-info-link:hover {
+  color: var(--blue);
+  background: var(--surface);
+}
+.skill-section-install {
+  max-width: 420px;
+  margin: 24px 0;
 }

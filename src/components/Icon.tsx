@@ -1,5 +1,9 @@
 import type { CSSProperties } from "react";
 const paths = {
+  info: "M12 11v6 M12 7h.01 M22 12a10 10 0 11-20 0 10 10 0 0120 0",
+  copy: "M9 9h12v12H9z M15 9V3H3v12h6",
+  check: "M5 12l4 4L19 6",
+  down: "M12 4v16 M6 14l6 6 6-6",
   folder: "M3 6h6l2 2h10v12H3z M3 6V4h6l2 2",
   root: "M4 12h16 M8 8l-4 4 4 4 M16 4v16",
   fit: "M8 3H3v5 M16 3h5v5 M3 16v5h5 M21 16v5h-5 M8 8h8v8H8z",

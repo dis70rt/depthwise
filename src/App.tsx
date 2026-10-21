@@ -12,7 +12,7 @@ import { buildPack, importFiles, type Pack } from "./lib/documents";
 import { readDroppedFiles } from "./lib/drop";
 import { Icon, Mark } from "./components/Icon";
 import { Modal } from "./components/Modal";
-import { LandingTree } from "./components/LandingTree";
+import { LandingPage, PROJECT_URL } from "./components/LandingPage";
 import { WorkspaceBoundary } from "./components/WorkspaceBoundary";
 const Workspace = lazy(() =>
   import("./components/Workspace").then((module) => ({
@@ -138,7 +138,9 @@ export default function App() {
       <a className="skip-link" href="#main">
         Skip to learning workspace
       </a>
-      <header className={`app-header ${session ? "app-header-loaded" : ""}`}>
+      <header
+        className={`app-header ${session ? "app-header-loaded" : "app-header-landing"}`}
+      >
         <a
           href="./"
           className="brand"
@@ -153,7 +155,13 @@ export default function App() {
         {session ? (
           <div id="workspace-header" className="header-workspace" />
         ) : (
-          <div className="header-context">a question worth following</div>
+          <nav className="landing-nav" aria-label="Project navigation">
+            <a href="#project">The project</a>
+            <a href="#skill">The skill</a>
+            <a href={PROJECT_URL} target="_blank" rel="noreferrer">
+              GitHub <span aria-hidden="true">↗</span>
+            </a>
+          </nav>
         )}
         <div className="header-actions">
           {session &&
@@ -249,71 +257,13 @@ export default function App() {
             </WorkspaceBoundary>
           </Suspense>
         ) : (
-          <div className="empty-layout">
-            <section className="empty-intro">
-              <div className="intro-note">
-                <span className="intro-rule" />
-                Your Markdown, connected.
-              </div>
-              <h1>
-                Follow the question<span className="accent">.</span>
-              </h1>
-              <p className="empty-description">
-                A thought opens a branch. A branch leads a little deeper.
-                <br className="desktop-break" /> Turn a folder of Markdown
-                questions into a tree you can explore.
-              </p>
-              <div
-                className={`folder-dropzone ${dragActive ? "drop-active" : ""}`}
-                role="region"
-                aria-label="Markdown folder drop zone"
-                aria-busy={Boolean(progress)}
-              >
-                <div className="dropzone-heading">
-                  <Icon name="folder" size={26} />
-                  <p>
-                    {dragActive
-                      ? "Release to open your folder"
-                      : "Drop your Markdown folder here"}
-                  </p>
-                </div>
-                <p className="dropzone-note">
-                  Nested folders welcome. Only Markdown is imported.
-                </p>
-                <button
-                  className="primary-button"
-                  onClick={() => picker.current?.click()}
-                  disabled={Boolean(progress)}
-                >
-                  <Icon name="folder" />
-                  Open Markdown folder<span aria-hidden="true">↗</span>
-                </button>
-              </div>
-              <button
-                className="example-button"
-                onClick={demo}
-                disabled={Boolean(progress)}
-              >
-                Or explore an example tree <span aria-hidden="true">→</span>
-              </button>
-              <p className="privacy-note">
-                <span className="status-dot" />
-                Files stay in your browser. No account needed.
-              </p>
-            </section>
-            <LandingTree />
-            <footer className="empty-footer">
-              <button onClick={() => setFormat(true)}>
-                <Icon name="file" size={15} />
-                Folder format
-              </button>
-              <a href="./depthwise-question-tree-SKILL.md" download>
-                <Icon name="download" size={15} />
-                Get the authoring skill
-              </a>
-              <span>Your Markdown. Room to think.</span>
-            </footer>
-          </div>
+          <LandingPage
+            dragActive={dragActive}
+            busy={Boolean(progress)}
+            onBrowse={() => picker.current?.click()}
+            onExample={demo}
+            onFormat={() => setFormat(true)}
+          />
         )}
       </main>
       {progress && (

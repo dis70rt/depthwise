@@ -81,3 +81,7 @@ All 14 example documents now contain ordinary answer paragraphs and supporting s
 ## Header context and canvas clearance
 
 `tests/header_browser.py` verifies that folder context lives in the application header, no duplicate canvas caption remains, and root/child focus sits 24px below the header. It checks that expanded files remain above the controls at 1920×1080, 1440×900, 1280×720, 768×844, and 390×844, with no page overflow. A 250-paragraph file scrolls within its preview on a 720px-high viewport. Mobile Outline still opens from the header. Screenshots at 1280px and 390px were reviewed; the production build and 24 unit tests pass.
+
+## Project landing and copy controls
+
+The production build and 24 unit tests pass. `tests/oss_landing_browser.py` verifies actual clipboard contents for the installation command and example prompt, success feedback, honest failure handling with selected text, section-anchor scrolling, GitHub links, skill download, responsive overflow, and entry into the real example workspace. Desktop hero and skill-section screenshots and the phone hero were reviewed. The skill-install block lives below the left-column actions; the import area stays compact until a file drag reveals the drop target.
