@@ -1,0 +1,11 @@
+# Operator review still required
+
+Known operator facts supplied by the owner: Ethernode is an unregistered project/company name; contact das.saikat.in@gmail.com; intended first dedicated origin depthwise.saikat.in, with a possible future move to depthwise.tech. Apache-2.0 was explicitly selected for app and skill. Do not infer an incorporated legal entity, business registration, mailing address, user geography, minimum age or hosting contract from these facts.
+
+Implemented data choices are disclosed before import and in the in-app privacy notice: local raw files/drafts/original baselines/navigation/directory references, browser memory versus remembered mode, no application encryption, deletion/export boundaries, persistent on-disk recovery copies, normal hosting metadata, and separate skill/agent processing. No analytics, ads, accounts, document-upload API, payment collection or embedded AI service is introduced as a purported compliance measure.
+
+Before public launch, the owner must decide and document the actual legal operator/contact identity as required for the markets offered, intended audiences/ages, hosting vendor/subprocessors/logging/retention, mailbox handling, sensitive-data positioning, marketing claims and any future monetization. Assess rights requests and whether any host/mail/other processor terms or agreements are needed based on actual roles. Do not insert a blanket cookie banner, age collection, DPA or DPIA without a factual requirement.
+
+Qualified review is still needed for applicable GDPR/UK territorial and role questions, ePrivacy/device storage rules where offered, India DPDP commencement and roles under the rules in force at launch, US state thresholds if relevant, children’s rules if the actual audience/features trigger them, and accessibility duties for the actual service/markets. These have not been certified by automated tests. The repository makes no assertion of universal compliance or that every listed law applies.
+
+Owner attestation of outside code/assets/contributions and review of the documented upstream license supplement remain human IP questions. Apache licensing gives no guarantee of freedom from all third-party claims. Terms, warranties and any future fees/subscriptions/refunds/tax treatment need review when those product facts exist; the current browser tool has no implemented payments.

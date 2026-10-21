@@ -16,6 +16,7 @@ import {
 } from "./lib/documents";
 import {
   clearSession,
+  setPersistence,
   SessionRecoveryError,
   loadSession,
   saveSession,
@@ -34,6 +35,7 @@ import {
   type DirectoryHandle,
 } from "./lib/folder-access";
 import { applyDraftInWorker } from "./lib/edit-worker";
+import { PrivacyNotice } from "./components/PrivacyNotice";
 import { RecoveryScreen } from "./components/AppRecovery";
 const NodeEditor = lazy(() =>
   import("./components/NodeEditor").then((module) => ({
@@ -69,6 +71,9 @@ export default function App() {
   const [session, setSession] = useState<SavedSession & { version: number }>();
   const [restoring, setRestoring] = useState(true);
   const [recovery, setRecovery] = useState("");
+  const [remember, setRemember] = useState(true);
+  const [privacyBusy, setPrivacyBusy] = useState(false);
+  const [privacy, setPrivacy] = useState(false);
   const [applying, setApplying] = useState(false);
   const applyingRef = useRef(false);
   const draftRevision = useRef(0);
@@ -616,11 +621,13 @@ export default function App() {
             <>
               <div className="workspace-savebar">
                 <span role="status">
-                  {browserStatus === "saving"
-                    ? "Saving in browser…"
-                    : browserStatus === "failed"
-                      ? "Browser save failed"
-                      : "Saved in browser"}
+                  {!remember
+                    ? "This tab only · export before closing"
+                    : browserStatus === "saving"
+                      ? "Saving in browser…"
+                      : browserStatus === "failed"
+                        ? "Browser save failed"
+                        : "Saved in browser"}
                   <span className="savebar-detail">
                     {" "}
                     ·{" "}
@@ -672,6 +679,7 @@ export default function App() {
                               open: editorOpen,
                               saving: draftStatus,
                               busy: applying,
+                              persistent: remember,
                               error: editorError,
                               onChange: changeDraft,
                               onClose: closeEditor,
@@ -687,8 +695,40 @@ export default function App() {
             </>
           ) : (
             <LandingPage
+              remember={remember}
+              onRemember={(enabled) => {
+                if (applyingRef.current) return;
+                if (
+                  !enabled &&
+                  session &&
+                  !window.confirm(
+                    "Stop remembering this workspace? This removes the saved browser copy and draft from storage. Your current work stays in this tab; export it before closing.",
+                  )
+                )
+                  return;
+                if (enabled) {
+                  setPersistence(true);
+                  setRemember(true);
+                  if (session)
+                    void saveSession(session)
+                      .then(() => saveDraft(session.id, draftRef.current))
+                      .catch(storageFailure);
+                } else {
+                  setPersistence(false);
+                  setRemember(false);
+                  setPrivacyBusy(true);
+                  void clearSession()
+                    .catch(() => {
+                      setPersistence(true);
+                      setRemember(true);
+                      storageFailure();
+                    })
+                    .finally(() => setPrivacyBusy(false));
+                }
+              }}
+              onPrivacy={() => setPrivacy(true)}
               dragActive={dragActive}
-              busy={Boolean(progress) || restoring}
+              busy={Boolean(progress) || restoring || privacyBusy}
               onBrowse={() => picker.current?.click()}
               onExample={demo}
               onFormat={() => setFormat(true)}
@@ -719,6 +759,7 @@ export default function App() {
               open={editorOpen}
               saving={draftStatus}
               busy={applying}
+              persistent={remember}
               error={editorError}
               onChange={changeDraft}
               onClose={closeEditor}
@@ -839,6 +880,22 @@ export default function App() {
                 the ZIP to keep your changes.
               </p>
             )}
+            {session?.directory && (
+              <button
+                className="text-link"
+                disabled={fileBusy}
+                onClick={() =>
+                  persistChanges({ ...session, directory: undefined })
+                }
+              >
+                Disconnect remembered folder
+              </button>
+            )}
+            <p>
+              Disconnect removes the saved handle reference, not the browser’s
+              permission grant. Revoke file access in your browser’s site
+              settings. Backups and exported files remain on disk.
+            </p>
             {fileBusy && <p role="status">Preparing your files…</p>}
             {fileMessage && <p role="status">{fileMessage}</p>}
             {fileError && (
@@ -980,15 +1037,32 @@ export default function App() {
             </a>
           </div>
           <p className="session-note">
-            Your latest folder and exploring position are saved in this browser.
-            Reopen Depthwise to continue where you left off. Clearing browser
-            data removes the saved session.
+            {remember
+              ? "Your latest folder, drafts and exploring position stay in this browser until you forget them or clear site data. Browser storage can be evicted; export important work."
+              : "This workspace stays in this tab only. Export important work before closing."}
           </p>
+          <button
+            className="text-link"
+            onClick={() => {
+              setHelp(false);
+              setPrivacy(true);
+            }}
+          >
+            Privacy and local data
+          </button>
           {session && (
             <button className="text-link" onClick={() => void forgetSession()}>
               Forget saved session
             </button>
           )}
+        </Modal>
+        <Modal
+          open={privacy}
+          onClose={() => setPrivacy(false)}
+          title="Privacy and local data"
+          description="What Depthwise keeps and how to remove it."
+        >
+          <PrivacyNotice />
         </Modal>
         <Modal
           open={format}

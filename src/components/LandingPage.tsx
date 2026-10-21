@@ -22,6 +22,9 @@ Explain the choice in your own words.
 - [What else could work?](alternatives.md)`;
 
 export function LandingPage({
+  remember,
+  onRemember,
+  onPrivacy,
   dragActive,
   busy,
   onBrowse,
@@ -30,6 +33,9 @@ export function LandingPage({
   onResume,
   resumeName,
 }: {
+  remember: boolean;
+  onRemember: (remember: boolean) => void;
+  onPrivacy: () => void;
   dragActive: boolean;
   busy: boolean;
   onBrowse: () => void;
@@ -93,10 +99,26 @@ export function LandingPage({
               Or explore an example tree <span aria-hidden="true">→</span>
             </button>
           </div>
-          <p className="privacy-note">
-            <span className="status-dot" />
-            Files stay in your browser. No account needed.
-          </p>
+          <div className="import-privacy">
+            <label>
+              <input
+                type="checkbox"
+                disabled={busy}
+                checked={remember}
+                onChange={(event) => onRemember(event.target.checked)}
+              />{" "}
+              Remember my folder and drafts in this browser
+            </label>
+            <p>
+              {remember
+                ? "Saved until you forget it or clear site data. Avoid shared browser profiles for private files."
+                : "This tab only. Export your work before closing."}{" "}
+              No document upload.{" "}
+              <button className="text-link" onClick={onPrivacy}>
+                Privacy and local data
+              </button>
+            </p>
+          </div>
           <div className="landing-install">
             <CopyBlock
               label="Install the authoring skill"
@@ -249,6 +271,10 @@ export function LandingPage({
         <a href="./depthwise-question-tree-SKILL.md" download>
           Authoring skill
         </a>
+        <button onClick={onPrivacy}>Privacy</button>
+        <a href="./THIRD-PARTY-NOTICES.txt">Licenses</a>
+        <a href="./TERMS.txt">Terms</a>
+        <a href="mailto:das.saikat.in@gmail.com">Contact Ethernode</a>
         <span>Made for your Markdown.</span>
       </footer>
     </div>
