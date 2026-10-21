@@ -1,0 +1,9 @@
+{
+  "react-remove-scroll-bar@2.3.8": {
+    "file": "docs/legal/react-remove-scroll-bar-2.3.8-LICENSE.txt",
+    "source": "https://raw.githubusercontent.com/theKashey/react-remove-scroll-bar/8ca9ba5ea52de03308fe8ced94f7b159a44d28ff/LICENSE",
+    "releaseGitHead": "b3b1287aad81def2e2ae707274b74531b61ddbaf",
+    "reason": "The installed 2.3.8 archive and release commit omit a standalone license; its package.json and README declare MIT. This is the same upstream project\u2019s current full license/copyright text; preserve the author notice, and re-review on upgrade.",
+    "retrieved": "2026-10-22"
+  }
+}

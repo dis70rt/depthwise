@@ -1,0 +1,5 @@
+Depthwise
+Copyright 2026 Depthwise contributors.
+Maintained under the Ethernode project name.
+
+Application source, project documentation, examples and the portable authoring skill are licensed under Apache License 2.0, except separately identified third-party material. The Ethernode and Depthwise names and marks are not licensed as trademarks. Third-party notices are shipped in THIRD-PARTY-NOTICES.txt and licenses/.

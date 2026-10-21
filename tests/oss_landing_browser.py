@@ -20,10 +20,11 @@ with sync_playwright() as p:
     install=page.get_by_role('button',name='Copy install the authoring skill',exact=True)
     install.click()
     expect(install).to_contain_text('Copied')
-    assert page.evaluate('navigator.clipboard.readText()')=='npx skills add dis70rt/depthwise'
+    assert page.evaluate('navigator.clipboard.readText()')=='npx skills@1.7.4 add dis70rt/depthwise'
     page.screenshot(path=str(ART/'oss-landing-hero-1440.png'))
     page.get_by_role('link',name='The project',exact=True).click()
     expect(page.get_by_role('heading',name='Your ideas have branches.')).to_be_in_viewport()
+    page.wait_for_function('() => document.querySelector(".main-empty").scrollTop > 300')
     assert page.locator('.main-empty').evaluate('(n)=>n.scrollTop')>300
     page.screenshot(path=str(ART/'oss-landing-project-1440.png'))
     page.get_by_role('link',name='The skill',exact=True).click()
@@ -39,7 +40,7 @@ with sync_playwright() as p:
     page.evaluate("() => { navigator.clipboard.writeText=async()=>{throw new Error('Clipboard unavailable')}; }")
     install.click()
     expect(page.locator('.copy-feedback')).to_contain_text('Text selected')
-    assert page.evaluate('getSelection().toString()')=='npx skills add dis70rt/depthwise'
+    assert page.evaluate('getSelection().toString()')=='npx skills@1.7.4 add dis70rt/depthwise'
     # Direct download remains available without an agent installation.
     response=context.request.get(BASE+'/depthwise-question-tree-SKILL.md')
     assert response.ok and 'name: depthwise-question-tree' in response.text()

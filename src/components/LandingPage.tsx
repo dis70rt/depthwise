@@ -3,7 +3,7 @@ import { Icon } from "./Icon";
 import { LandingTree } from "./LandingTree";
 
 export const PROJECT_URL = "https://github.com/dis70rt/depthwise";
-export const INSTALL_COMMAND = "npx skills add dis70rt/depthwise";
+export const INSTALL_COMMAND = "npx skills@1.7.4 add dis70rt/depthwise";
 export const EXAMPLE_PROMPT =
   "Use depthwise-question-tree to explore [my topic, idea, or project]. Create a Markdown folder with progressively deeper follow-up questions. Match my goals, level of detail, and formatting. Include answers and examples where useful.";
 const markdown = `# Why build it this way?

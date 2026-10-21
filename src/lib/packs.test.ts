@@ -57,7 +57,7 @@ describe("portable authoring skill and sample outputs", () => {
       readFileSync("public/depthwise-question-tree-SKILL.md", "utf8"),
     ).toBe(skill);
     expect(skill).toMatch(
-      /^---\nname: depthwise-question-tree\ndescription: .+\n---/,
+      /^---\nname: depthwise-question-tree\nlicense: Apache-2.0\ndescription: .+\n---/,
     );
     expect(skill).toContain("## Follow-up questions");
     expect(skill).toContain("Cannot write files?");

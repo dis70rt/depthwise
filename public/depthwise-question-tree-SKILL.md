@@ -1,5 +1,6 @@
 ---
 name: depthwise-question-tree
+license: Apache-2.0
 description: Create linked Markdown question trees for Depthwise from topics, notes, or projects. Use for concept exploration, idea development, brainstorming, decisions, or study and interview preparation. Structure progressively deeper follow-ups, with optional answers and explanations suited to the user's prompt.
 ---
 

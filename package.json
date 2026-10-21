@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/licenses.mjs && tsc -b && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "check": "npm run test && npm run build",
     "format": "prettier --write src vite.config.ts index.html",
     "format:check": "prettier --check src vite.config.ts index.html",
-    "test:browser": "python tests/browser.py"
+    "test:browser": "python tests/browser.py",
+    "check:licenses": "node scripts/licenses.mjs --check"
   },
   "dependencies": {
     "@fontsource-variable/atkinson-hyperlegible-next": "^5.3.0",
@@ -45,5 +46,6 @@
   },
   "engines": {
     "node": ">=22.12.0"
-  }
+  },
+  "license": "Apache-2.0"
 }

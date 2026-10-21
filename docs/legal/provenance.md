@@ -1,0 +1,11 @@
+# Licensing and provenance record
+
+On 22 October 2026 the repository owner explicitly selected **Apache-2.0 for both the application and portable authoring skill**. Root LICENSE and the skill LICENSE contain the Apache terms; package metadata and both SKILL.md copies declare the same license. Root/public NOTICE describes the scope and preserves separate third-party terms. This decision is not proof of rights to every historical contribution; the owner must attest any outside contributions/assets before release.
+
+The app’s tree diagrams, SVG mark/favicon, Markdown examples and interface source are maintained in this repository. No downloaded photography or hosted stock-art integration is present in the reviewed source. Source includes AI-assisted work; authorship/permission of any externally copied material still requires human confirmation, rather than an automated originality claim.
+
+Atkinson Hyperlegible Next and JetBrains Mono are distributed with their original OFL notices. The shipped THIRD-PARTY-NOTICES.txt conservatively includes all 141 installed production dependencies, their locked versions and full installed license/NOTICE files. This includes browser, parser-worker, editing-worker and optional ZIP runtime code even if bundling removes portions. Development-only tools are not shipped in the website artifact; redistributing development binaries requires reviewing their own terms, including MPL tools.
+
+One npm archive, react-remove-scroll-bar@2.3.8, declares MIT in package metadata and README but omits a full license file. The exact published gitHead also lacks that path. `license-supplements.json` pins the same upstream project’s current full MIT license/copyright notice, its retrieval date and the limitation. That text is shipped without changing it. Review this supplemental provenance on upgrades; this is not a claim to have obtained a separate legal opinion or release-specific permission letter.
+
+`node scripts/licenses.mjs --check` detects stale notices, missing texts and installed/lockfile version mismatch. It is an evidence check, not a comprehensive compatibility/provenance certification. Unknown licenses fail generation rather than silently disappearing.
