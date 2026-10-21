@@ -1,0 +1,5 @@
+Contact: mailto:das.saikat.in@gmail.com
+Expires: 2027-10-01T00:00:00Z
+Preferred-Languages: en
+Canonical: https://depthwise.saikat.in/.well-known/security.txt
+Policy: https://github.com/dis70rt/depthwise/blob/main/SECURITY.md

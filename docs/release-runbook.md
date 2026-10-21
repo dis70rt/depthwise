@@ -1,0 +1,39 @@
+# Depthwise release and incident runbook
+
+Owner: the Ethernode project maintainer. Public support, privacy and private security contact: **das.saikat.in@gmail.com**. Ethernode is not represented as a registered company. The owner authorizes releases and must assign a backup operator before promising supported availability. No production deployment or account configuration has been performed by these repository changes.
+
+## Dedicated origin and hosting
+
+Use **https://depthwise.saikat.in** as the initial dedicated origin. Do not host unrelated/untrusted applications on that exact scheme/host/port. Paths and database names do not isolate browser-stored documents. The repository includes CNAME for a custom-domain Pages setup, but that file does not configure DNS, TLS or security headers by itself. Check all DNS records and domain ownership in the actual host before publishing; remove stale hosting records when decommissioning.
+
+`dist/` is the deployable static artifact, not the Vite development server. `public/_headers` supplies CSP, anti-framing, MIME/referrer/permission/transport policies and separate HTML/hashed-asset caching for hosts that support that format. Verify the chosen host actually honors it. GitHub Pages alone does not apply `_headers`; add an independently configured response-header layer or use a host with those controls. Do not represent the template as deployed protection.
+
+CSP allows same-origin scripts/assets, self/blob workers, inlined data fonts emitted by Vite, and inline styles needed by the canvas and motion library. It does not allow inline script, eval, remote script, arbitrary connections, objects or framing. Broad inline-style permission remains an intentional compatibility tradeoff. Do not loosen script/connection policies to hide a regression; test imports, inline editing, previews, ZIP downloads and file pickers against the actual policy. HSTS is scoped to this hostname without includeSubDomains or preload promises.
+
+The future **depthwise.tech** is a new origin. Export/reimport users’ Markdown; directory grants and browser sessions do not migrate across origins. Keep the old origin available long enough to export where possible. Do not try to bridge private browser storage through another origin automatically.
+
+## Before a release
+
+1. Review the diff and audit-remediation record. AUD-001 (concurrent tabs) is deliberately deferred by the owner; do not silently mark it resolved. Confirm residual direct-write/OS-race risk and backup retention are acceptable for the intended use.
+2. In a clean controlled environment, use Node 22.23.4 (minimum 22.12) and `npm ci --ignore-scripts`. The lockfile pins installed versions/integrity; no lifecycle scripts are required by the reviewed build. Run `npm run check:licenses`, `npm run check`, `npm audit --audit-level=low --ignore-scripts`, and `node scripts/check-release.mjs`. If the advisory service is unavailable, the check is UNKNOWN, not clean. Review every advisory’s scope/reachability; exceptions need a named owner, rationale and expiry. No blanket exceptions exist. The official Node 22.23.4 archive was checksum-verified for local release tests; re-review supported runtime patch releases before each release.
+3. Run the browser checks against `npm run preview -- --port 4173`, which uses production response policies. Critical suites: security_browser.py, editing_browser.py, session_browser.py, header_browser.py, landing_browser.py. CI is read-only, uses immutable official action pins and receives no deployment secrets. Confirm the workflow actually runs on GitHub; local success does not prove branch protection.
+4. Confirm dependency notices, Apache license, OFL notices, reporting details and matching skill copies are in the artifact. The artifact scan checks private-key markers and source-map absence, not all possible secrets. Review additions and use the host/repository’s secret protections where available.
+5. Record commit, Node/npm versions, lock hash, check results and artifact digest. Keep immutable prior artifacts and associated storage-format documentation in access-controlled release storage. Do not place customer browser data in release artifacts.
+6. Review hosting logs/retention, operator identity/markets/intended ages, processor terms, legal applicability and mailbox retention using docs/legal/launch-review.md. Verify repository/host/domain/mail accounts have MFA and least privilege, branch/release protections and recovery access. These cannot be configured or certified from source files.
+7. After separately authorized deployment, run `node scripts/verify-deployment.mjs https://depthwise.saikat.in`. It verifies selected response policies and HTTP-to-HTTPS redirect, with normal certificate validation. Also inspect actual CDN caching, TLS policy, DNS/certificate ownership and admin settings manually. Run synthetic import/edit/restore/export and iframe-blocking checks on that topology without real customer content.
+
+## Rollback and storage compatibility
+
+Current persisted format is schema 2: raw Markdown sources plus necessary original baselines, entry/mode/id and optional directory handle. Draft and view are separate records. Legacy pre-schema Pack records are reparsed/sanitized and migrated; invalid view geometry falls back to a fresh view. Unknown formats or unusable raw data expose recovery-download/reset controls instead of erasing storage. Recovery JSON includes private raw/draft/baseline data and omits directory capabilities/rendered HTML.
+
+Do not roll back from schema 2 to a pre-schema build: that build cannot restore schema 2. Keep a known schema-2-compatible recovery build. Test rollback locally with synthetic legacy, current, malformed and unknown-version saved states; confirm draft recovery, protected example replacement, raw recovery download, ZIP contents and Forget. Repository browser/unit tests cover these building blocks; a hosted artifact rollback drill and historical release compatibility beyond these formats remain operator gates. Never tell users to clear site data before exporting recoverable work.
+
+If a release breaks rendering, revert the static artifact to a reviewed schema-compatible build. Preserve the current/prior artifact and sanitized technical evidence. Do not collect users’ IndexedDB, files or handles as automatic telemetry.
+
+## Availability, cost and incident response
+
+For now the service is a static site with no customer backend backup. Browser storage can be evicted, cleared or lost with a profile/device; exports are the user’s independent copies. Filesystem recovery copies live under `.depthwise-backups/` until the user deletes them; they are not a server backup or an atomic multi-file transaction.
+
+Before supported launch, configure an external synthetic check for homepage status, hashed script/font loading and expected CSP/headers, with alerts to the owner. Probe only public static assets and a disposable synthetic browser profile; never send real Markdown, paths, handles or browsing history to monitoring. Document alert routing, quotas/bandwidth/cost limits, certificate/domain expiry, artifact restore access and backup operator. No monitoring provider, paid plan or analytics has been installed by this work.
+
+On a report: acknowledge privately, reproduce with synthetic content, assess affected versions/data and containment (disable publishing or revert to a compatible artifact if needed), preserve minimal sanitized evidence, patch/test, rotate actually affected credentials if any, and publish a clear fix/advisory. Ask qualified counsel to assess notification obligations based on actual exposure/jurisdiction; do not infer that every browser failure is a reportable breach. Close with root cause, affected releases, recovery instructions, evidence and owner signoff.
