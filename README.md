@@ -78,7 +78,7 @@ Supported: UTF-8 Markdown, nested directories, up to 1,000 files, 1 MiB per file
 - Drag the background to pan; scroll/pinch or use the zoom controls to zoom.
 - Scroll inside Markdown previews to read long files.
 - Use the heading outline to jump within the focused document. On smaller screens, open **Outline**.
-- When a question control has keyboard focus: Enter/Space toggles, Left selects the parent, Right opens/selects the first child, Up/Down selects siblings, and Home selects the root.
+- Keyboard navigation is ready when a tree opens or resumes, including after clicking the canvas background: Enter/Space toggles, Left selects the parent, Right opens/selects the first child, Up/Down selects siblings, and Home selects the root. Editing fields, dialogs and reading previews keep their normal keys. Tab can move to other controls without a delayed animation pulling focus back.
 - Collapsing and reopening preserves explored descendant branches for the session.
 - Reduced-motion preferences disable decorative branch motion and animated focus panning.
 

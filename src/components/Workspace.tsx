@@ -327,6 +327,7 @@ export function Workspace({
     ancestors: string[];
   } | null>(null);
   const transition = useRef(0);
+  const allowDeferredFocus = useRef(true);
   const openingNode = useRef<string | undefined>(undefined);
   const expansionAnchor = useRef<{
     id: string;
@@ -578,7 +579,15 @@ export function Workspace({
         const element = window.document.getElementById(
           `node-${encodeURIComponent(todo.id)}`,
         );
-        if (todo.keyboard)
+        if (
+          todo.keyboard &&
+          allowDeferredFocus.current &&
+          !editor?.open &&
+          !window.document.querySelector(
+            '[role="dialog"], [role="alertdialog"], dialog[open]',
+          ) &&
+          !host.current?.closest("[inert]")
+        )
           element
             ?.querySelector<HTMLButtonElement>(".node-toggle")
             ?.focus({ preventScroll: true });
@@ -600,18 +609,19 @@ export function Workspace({
       reduced ? 0 : 290,
     );
     return () => window.clearTimeout(handle);
-  }, [layout, tree, bringIntoView, reduced, focused, opening]);
+  }, [layout, tree, bringIntoView, reduced, focused, opening, editor?.open]);
   useEffect(() => {
     const saved = initialView?.viewport;
     const sameSize =
       saved?.width === window.innerWidth &&
       saved?.height === window.innerHeight;
-    if (!saved || !sameSize || initialHeading)
-      pending.current = {
-        id: initialView?.focused ?? root,
-        heading: initialHeading,
-        force: true,
-      };
+    pending.current = {
+      id: initialView?.focused ?? root,
+      heading: initialHeading,
+      force: !saved || !sameSize || Boolean(initialHeading),
+      positioned: Boolean(saved && sameSize && !initialHeading),
+      keyboard: true,
+    };
   }, [root, initialHeading, initialView]);
   useEffect(() => {
     let active = document?.headings[0]?.id ?? "";
@@ -834,36 +844,133 @@ export function Workspace({
     },
     [focused, scheduleSave],
   );
-  const onKey = (event: KeyboardEvent, id: string) => {
-    const node = tree.nodes.get(id)!;
-    let target: string | undefined;
-    const siblings = node.parent
-      ? tree.nodes.get(node.parent)!.children
-      : [root];
-    const index = siblings.indexOf(id);
-    if (event.key === "ArrowLeft") target = node.parent;
-    if (event.key === "ArrowRight") {
-      if (!expanded.has(id)) {
-        toggle(id);
+  const onKey = useCallback(
+    (event: KeyboardEvent | globalThis.KeyboardEvent, id: string) => {
+      if (
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        ("nativeEvent" in event
+          ? event.nativeEvent.isComposing
+          : event.isComposing)
+      )
+        return;
+      const node = tree.nodes.get(id);
+      if (!node) return;
+      if (event.repeat && (event.key === "Enter" || event.key === " ")) {
         event.preventDefault();
         return;
       }
-      target = node.children[0];
-    }
-    if (event.key === "ArrowDown") target = siblings[index + 1];
-    if (event.key === "ArrowUp") target = siblings[index - 1];
-    if (event.key === "Home") target = root;
-    if (target) {
+      if (event.key === "Enter" || event.key === " ")
+        allowDeferredFocus.current = true;
+      if (
+        !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home"].includes(
+          event.key,
+        )
+      )
+        return;
+      // Consume tree-navigation keys even at a boundary, rather than scrolling the page.
+      allowDeferredFocus.current = true;
       event.preventDefault();
-      setFocused(target);
-      pending.current = { id: target, keyboard: true };
-      bringIntoView(target);
-      window.document
-        .getElementById(`node-${encodeURIComponent(target)}`)
-        ?.querySelector<HTMLButtonElement>(".node-toggle")
-        ?.focus({ preventScroll: true });
-    }
-  };
+      let target: string | undefined;
+      const siblings = node.parent
+        ? tree.nodes.get(node.parent)!.children
+        : [root];
+      const index = siblings.indexOf(id);
+      if (event.key === "ArrowLeft") target = node.parent;
+      if (event.key === "ArrowRight") {
+        if (!expanded.has(id)) {
+          if (openingNode.current !== id) toggle(id);
+          return;
+        }
+        target = node.children[0];
+      }
+      if (event.key === "ArrowDown") target = siblings[index + 1];
+      if (event.key === "ArrowUp") target = siblings[index - 1];
+      if (event.key === "Home") target = root;
+      if (target) {
+        cancelOpening();
+        setFocused(target);
+        pending.current = { id: target, keyboard: true };
+        void bringIntoView(target);
+        window.document
+          .getElementById(`node-${encodeURIComponent(target)}`)
+          ?.querySelector<HTMLButtonElement>(".node-toggle")
+          ?.focus({ preventScroll: true });
+      }
+    },
+    [tree, root, expanded, toggle, cancelOpening, bringIntoView],
+  );
+  useEffect(() => {
+    // The active detached tree owns shortcuts; the main tree stays mounted for return.
+    if (detached) return;
+    const cancelDeferredFocus = () => {
+      allowDeferredFocus.current = false;
+    };
+    const keydown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Tab") {
+        cancelDeferredFocus();
+        return;
+      }
+      if (
+        event.defaultPrevented ||
+        event.isComposing ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        editor?.open ||
+        host.current?.closest("[inert]")
+      )
+        return;
+      if (
+        ![
+          "ArrowLeft",
+          "ArrowRight",
+          "ArrowUp",
+          "ArrowDown",
+          "Home",
+          "Enter",
+          " ",
+        ].includes(event.key)
+      )
+        return;
+      if (
+        window.document.querySelector(
+          '[role="dialog"], [role="alertdialog"], dialog[open]',
+        )
+      )
+        return;
+      const element = event.target instanceof Element ? event.target : null;
+      if (
+        element?.closest(
+          '.node-toggle, input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"], [role="slider"], [role="spinbutton"], [role="listbox"], [role="menu"], .preview, .editor-preview, .outline-rail',
+        )
+      )
+        return;
+      // Keep native activation on toolbars and links; arrows can return to the active branch.
+      if (
+        (event.key === "Enter" || event.key === " ") &&
+        element?.closest('button, a, [role="button"]')
+      )
+        return;
+      const id = tree.nodes.has(focused) ? focused : root;
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        if (!event.repeat) {
+          allowDeferredFocus.current = true;
+          toggle(id);
+        }
+      } else onKey(event, id);
+    };
+    window.document.addEventListener("keydown", keydown);
+    window.document.addEventListener("pointerdown", cancelDeferredFocus);
+    return () => {
+      window.document.removeEventListener("keydown", keydown);
+      window.document.removeEventListener("pointerdown", cancelDeferredFocus);
+    };
+  }, [detached, editor?.open, focused, tree, root, onKey, toggle]);
   if (detached)
     return (
       <div className="detached-workspace">

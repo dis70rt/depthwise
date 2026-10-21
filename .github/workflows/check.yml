@@ -46,3 +46,4 @@ jobs:
           DEPTHWISE_URL=http://127.0.0.1:4173 /tmp/depthwise-ci-browser/bin/python tests/browser.py
           DEPTHWISE_URL=http://127.0.0.1:4173 /tmp/depthwise-ci-browser/bin/python tests/oss_landing_browser.py
           DEPTHWISE_URL=http://127.0.0.1:4173 /tmp/depthwise-ci-browser/bin/python tests/drop_browser.py
+          DEPTHWISE_URL=http://127.0.0.1:4173 /tmp/depthwise-ci-browser/bin/python tests/keyboard_browser.py

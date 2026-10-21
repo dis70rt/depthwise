@@ -1020,8 +1020,10 @@ export default function App() {
             </div>
           </dl>
           <p className="muted">
-            Arrow shortcuts apply when a question control has keyboard focus.
-            Scroll inside an expanded preview to read long files.
+            Arrow shortcuts work as soon as the tree opens and after clicking
+            the canvas background. Editing fields, dialogs and reading previews
+            keep their normal keys. Scroll inside an expanded preview to read
+            long files.
           </p>
           <div className="help-links">
             <button
