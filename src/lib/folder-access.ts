@@ -1,4 +1,4 @@
-import type { Pack } from "./documents";
+import { LIMITS, type Pack } from "./documents";
 import { markdownPath, type Originals } from "./editing";
 export type DirectoryHandle = FileSystemDirectoryHandle & {
   values(): AsyncIterableIterator<FileSystemHandle>;
@@ -36,7 +36,12 @@ async function readAt(
   path: string,
 ): Promise<string | null> {
   try {
-    return await (await (await fileAt(root, path, false)).getFile()).text();
+    const file = await (await fileAt(root, path, false)).getFile();
+    if (file.size > LIMITS.fileBytes)
+      throw new Error(
+        `${path} exceeds the comparison limit; it was not read or overwritten.`,
+      );
+    return await file.text();
   } catch (error) {
     if ((error as DOMException).name === "NotFoundError") return null;
     throw error;
@@ -51,7 +56,53 @@ export class FolderSaveError extends Error {
     super(message);
   }
 }
+/** Postorder across the entire dependency graph; cycles cannot have a child-first plan. */
+export function folderWritePlan(pack: Pack, paths: string[]): string[] {
+  const colors = new Map<string, number>();
+  const ordered: string[] = [];
+  for (const root of [...pack.documents.keys()].sort()) {
+    const stack: { path: string; leave?: boolean }[] = [{ path: root }];
+    while (stack.length) {
+      const step = stack.pop()!;
+      if (step.leave) {
+        colors.set(step.path, 2);
+        ordered.push(step.path);
+        continue;
+      }
+      if (colors.get(step.path) === 1)
+        throw new Error(
+          "This folder contains a link cycle. Use ZIP export; a safe child-first folder save is not possible. No files were written.",
+        );
+      if (colors.get(step.path) === 2) continue;
+      colors.set(step.path, 1);
+      stack.push({ path: step.path, leave: true });
+      for (const child of pack.documents
+        .get(step.path)
+        ?.children.slice()
+        .reverse() ?? []) {
+        if (child.target && pack.documents.has(child.target))
+          stack.push({ path: child.target });
+      }
+    }
+  }
+  const requested = new Set(paths);
+  return ordered.filter((path) => requested.has(path));
+}
+let writing = false;
 export async function writeFolder(
+  root: DirectoryHandle,
+  pack: Pack,
+  originals: Originals,
+): Promise<string[]> {
+  if (writing) throw new Error("A folder save is already in progress.");
+  writing = true;
+  try {
+    return await writeFolderOnce(root, pack, originals);
+  } finally {
+    writing = false;
+  }
+}
+async function writeFolderOnce(
   root: DirectoryHandle,
   pack: Pack,
   originals: Originals,
@@ -68,7 +119,10 @@ export async function writeFolder(
     empty = false;
     break;
   }
-  const paths = empty ? [...pack.documents.keys()] : Object.keys(originals);
+  const paths = folderWritePlan(
+    pack,
+    empty ? [...pack.documents.keys()] : Object.keys(originals),
+  );
   if (!paths.length) return [];
   // Preflight every changed file before the first write. Missing originals and new-file
   // collisions are conflicts too; never silently overwrite another folder's contents.
@@ -84,11 +138,9 @@ export async function writeFolder(
   }
   const saved: string[] = [];
   let writingPath: string | undefined;
+  let backup: FileSystemDirectoryHandle | undefined;
+  let backupName = "";
   try {
-    // Newly added files are written before modified parents, so links don't precede their targets.
-    paths.sort(
-      (a, b) => Number(originals[a] !== null) - Number(originals[b] !== null),
-    );
     for (const path of paths) {
       writingPath = path;
       const text = pack.documents.get(path)!.raw;
@@ -98,10 +150,40 @@ export async function writeFolder(
           `${path} changed while saving. It was not overwritten.`,
         );
       if (current !== text) {
+        // Capture a recovery version before touching an existing file. These copies
+        // deliberately remain on disk; the UI discloses their location and retention.
+        if (current !== null) {
+          if (!backup) {
+            backupName = `.depthwise-backups/${new Date().toISOString().replace(/[:.]/g, "-")}-${crypto.randomUUID()}`;
+            const [base, run] = backupName.split("/");
+            backup = await (
+              await root.getDirectoryHandle(base, { create: true })
+            ).getDirectoryHandle(run, { create: true });
+          }
+          const recovery = await (
+            await fileAt(backup as DirectoryHandle, path, true)
+          ).createWritable();
+          try {
+            await recovery.write(current);
+            await recovery.close();
+          } catch (error) {
+            await recovery.abort().catch(() => {});
+            throw error;
+          }
+        }
+        const handle = await fileAt(root, path, true);
         const writable = await (
-          await fileAt(root, path, true)
-        ).createWritable();
+          handle.createWritable as (options?: {
+            mode: string;
+          }) => Promise<FileSystemWritableFileStream>
+        )({ mode: "exclusive" });
         try {
+          // Catch edits during writable creation as well as the initial preflight.
+          const afterOpen = await readAt(root, path);
+          if (afterOpen !== (current ?? ""))
+            throw new Error(
+              `${path} changed while opening its writer. It was not overwritten.`,
+            );
           await writable.write(text);
           await writable.close();
         } catch (error) {
@@ -125,7 +207,7 @@ export async function writeFolder(
       if (current === "") pending[writingPath] = "";
     }
     throw new FolderSaveError(
-      `${saved.length} file(s) saved before writing stopped: ${(error as Error).message}. Remaining changes are still in your browser.`,
+      `${saved.length} file(s) saved before writing stopped: ${(error as Error).message}. Remaining changes are still in your browser.${backupName ? ` Recovery files: ${backupName}.` : ""}`,
       saved,
       pending,
     );
