@@ -2527,3 +2527,13 @@ h3 {
     width: auto;
   }
 }
+
+.workspace-recovery {
+  max-width: 760px;
+  margin: auto;
+  padding: 32px;
+  line-height: 1.7;
+}
+.workspace-recovery button {
+  margin: 16px 12px 0 0;
+}

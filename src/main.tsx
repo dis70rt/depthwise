@@ -5,9 +5,12 @@ import "@fontsource/jetbrains-mono/500.css";
 import "@fontsource-variable/atkinson-hyperlegible-next";
 import "./style.css";
 import App from "./App";
+import { AppRecovery } from "./components/AppRecovery";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <AppRecovery>
+      <App />
+    </AppRecovery>
   </StrictMode>,
 );
