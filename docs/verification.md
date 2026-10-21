@@ -97,3 +97,11 @@ The production build and 35 unit tests pass. Editing tests cover baseline tracki
 The taste-skill app inspector reports no failures at 1440, 768, and 390 pixels. Its single no-data-hue warning treats the question-tree SVG as a numerical chart; this is intentional because only the active exploration path receives blue emphasis. Desktop branch controls and phone editor screenshots were reviewed.
 
 Inline editing follow-up: existing documents now edit inside their expanded node; new follow-ups retain the dialog. TypeScript checking, all 35 unit tests, and a production bundle built into `/tmp` pass. The editing browser suite passes with zero page errors at 1440, 768 and 390 pixels, including full textarea visibility, inline preview, reload recovery, collapse-and-resume, add dialogs, ZIP export and writable-folder flows. Desktop and phone screenshots were reviewed. These checks do not resolve or supersede the separate pre-launch audit findings.
+
+## Security remediation — 22 October 2026
+
+The owner authorized all audit remediation except concurrent-tab handling. See [the finding-by-finding record](remediation-2026-10-22.md) for implemented changes, exact limits and open deployment/legal/operator gates. The original audit remains historical evidence.
+
+Current TypeScript, formatting, 45 unit tests, production build and license/artifact checks pass. A clean lockfile installation with lifecycle scripts disabled also passed under checksum-verified Node 22.23.4 in an isolated `/tmp` directory. The live npm advisory query reported zero known findings for the lockfile; this is not a blanket security claim.
+
+The eight current local Chrome suites cover bounded delayed acknowledgements and Apply, example replacement, draft removal, schema recovery, session-only mode, large ZIP workers under response CSP, editing/export/folder conflicts, deep session restoration, header/control clearance at five viewport sizes, pause/resume by keyboard, installer clipboard behavior, navigation, inert embeds and dropped folders. Some pre-existing tests needed explicit Home navigation after restore and settled scrolling/canvas positions; meaningful assertions remain. Native OS picker/permission dialogs, Safari/Firefox/AT, hosted CI, production policies and legal/operator facts remain unverified.

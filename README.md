@@ -2,7 +2,7 @@
 
 Explore a folder of Markdown questions, answers, and notes as a horizontal question tree with curved branches and an active path. Open a question to read its Markdown and reveal its follow-ups. The canvas moves to a question before its preview expands. A heading outline follows the focused file on the right.
 
-Files stay in your browser. The latest imported folder, expanded branches, focused question, canvas position, and reading positions are saved locally in IndexedDB, so reopening the site resumes your exploration without another upload. There is no account, backend, answer generation, or document telemetry. Use **Help → Forget saved session** to remove the saved folder; clearing site data also removes it. Browser storage restrictions or eviction can prevent restoration.
+Files stay in your browser. With Remember enabled, the latest imported folder, expanded branches, focused question, canvas position, and reading positions are saved locally in IndexedDB, so reopening the site resumes your exploration without another upload. There is no account, backend, answer generation, or document telemetry. Use **Help → Forget saved session** to remove the saved folder; clearing site data also removes it. Browser storage restrictions or eviction can prevent restoration.
 
 ## Run locally
 
@@ -84,11 +84,11 @@ Supported: UTF-8 Markdown, nested directories, up to 1,000 files, 1 MiB per file
 
 ## Edit and extend a tree
 
-Open a node and use **Edit** in its footer to write ordinary Markdown or preview it directly inside the expanded node. Adding a follow-up opens a dialog. **Update tree** applies the draft to the browser copy. Unfinished drafts are saved separately and recovered after reopening; **Keep draft** returns the node to reading mode and **Resume draft** returns to it. **Discard draft** leaves the applied document unchanged.
+Open a node and use **Edit** in its footer to write ordinary Markdown or preview it directly inside the expanded node. Adding a follow-up opens a dialog. **Update tree** applies the draft to the browser copy. With Remember enabled, unfinished drafts are saved separately and recovered after reopening; **Keep draft** returns the node to reading mode and **Resume draft** returns to it. **Discard draft** leaves the applied document unchanged.
 
 In a linked tree, a light **+** sits to the right of an open leaf or below its existing follow-up branches. It creates a Markdown file and updates its parent’s reserved follow-up links together. Choose a unique relative `.md` path. Folder-derived mode supports editing existing files; authored follow-ups belong to linked trees.
 
-Use **Save & export** to download a ZIP containing all current Markdown files and their folder structure. Where `showDirectoryPicker` is supported, **Save to folder** requests write access: select the original folder to save modified files or an empty folder for a complete copy. Direct saves check existing contents, create new child files before updating parent links, and report partial writes honestly. If another tool edited a file, Depthwise refuses to overwrite it; choose another empty folder or export a ZIP. Downloads include applied changes; finish drafts before exporting. Non-Markdown files are not included in the ZIP and are left untouched by folder saves.
+Use **Save & export** to download a ZIP containing all current Markdown files and their folder structure. Where `showDirectoryPicker` is supported, **Save to folder** requests write access: select the original folder to save modified files or an empty folder for a complete copy. Direct saves check existing contents, create new child files before updating parent links, and report partial writes honestly. Detected external edits block saving; choose another empty folder or export a ZIP. Browser locks cannot exclude every external writer. Before overwriting an existing file, a recovery version is written under `.depthwise-backups/`; these copies remain until you delete them. Cyclic graphs require ZIP export for a complete copy. Downloads include applied changes; finish drafts before exporting. Non-Markdown files are not included in the ZIP and are left untouched by folder saves.
 
 The selected writable handle is remembered locally, but the browser may ask for permission again after reopening. Browsers without direct folder access retain editing, draft recovery and ZIP export. Renaming, moving and deleting files are outside this version. Opening another folder asks before replacing a workspace with edits or an unfinished draft.
 
@@ -123,3 +123,15 @@ The tested browser is desktop Chrome. Folder selection uses `webkitdirectory`; b
 The app uses React, TypeScript, Vite, Motion, react-zoom-pan-pinch, Radix Dialog, and the unified/remark/rehype Markdown pipeline. A small iterative layout arranges variable-height previews; visible connectors are box-drawing glyphs rather than ordinary diagram curves. Local JetBrains Mono and Atkinson Hyperlegible Next fonts use the Catppuccin Mocha palette.
 
 See [task.md](task.md) for the full requirements and completion evidence, and [design decisions](docs/design.md) for the library choice and visual rationale.
+
+## Privacy, licensing and release
+
+App and portable skill: [Apache-2.0](LICENSE). Third-party code/fonts retain their own licenses; the build ships full runtime license notices. Ethernode is the maintainer’s project name, not a registered-company claim. Support, privacy and private security reports: **das.saikat.in@gmail.com** ([security policy](SECURITY.md)).
+
+Before import, choose whether this browser remembers your folder/drafts or keeps new work in this tab only. Stored data is not app-encrypted; Forget clears application storage, not exported files, operating-system copies, browser grants or on-disk backups. Before overwriting an existing file, folder saving keeps a recovery version under `.depthwise-backups/`; delete these yourself when no longer needed. Folder saves can partially complete, and browser file locks do not exclude every external editor.
+
+The intended initial deployment is the dedicated origin **depthwise.saikat.in**. Export/reimport when moving to **depthwise.tech**: browser data and directory grants do not move automatically. The header template must be applied by a capable host; ordinary GitHub Pages does not apply `_headers`. See the [release/rollback/incident runbook](docs/release-runbook.md) and [operator legal review](docs/legal/launch-review.md). No production deployment or comprehensive legal/WCAG certification is implied by local checks.
+
+Concurrent-tab write conflicts remain deliberately deferred (AUD-001). Use one editing tab per workspace until that task is implemented. The original audit is historical evidence; [the remediation record](docs/remediation-2026-10-22.md) tracks subsequent changes and open deployment/human-review gates.
+
+The website’s install command pins the separate `skills@1.7.4` CLI. It requires Node >=22.20 and is not part of the document-processing runtime. Upstream documents anonymous usage telemetry/security-audit requests: set `DISABLE_TELEMETRY=1` or `DO_NOT_TRACK=1` in your terminal environment to opt out before running the command. CLI/skill downloads still need the network. See [the CLI’s own documentation](https://github.com/vercel-labs/skills/blob/main/docs/troubleshooting.md#telemetry); the direct SKILL.md download avoids executing the CLI.

@@ -1,0 +1,114 @@
+{
+  "date": "2026-10-22",
+  "baseCommit": "3f15bd9",
+  "excludedFinding": "AUD-001",
+  "authorization": "All other audit findings; owner subsequently authorized focused commits; no deployment",
+  "nodeTests": [
+    "22.22.2",
+    "22.23.4"
+  ],
+  "officialNodeArchive": {
+    "url": "https://nodejs.org/dist/v22.23.4/node-v22.23.4-linux-x64.tar.xz",
+    "sha256": "1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce",
+    "installation": "isolated /tmp only"
+  },
+  "npmAudit": {
+    "command": "npm audit --json --ignore-scripts",
+    "auditReportVersion": 2,
+    "vulnerabilities": {},
+    "lockedEntries": 225,
+    "totalReportedVulnerabilities": 0,
+    "limitation": "Current registry advisory response only; not a full security proof"
+  },
+  "unitTests": {
+    "files": 7,
+    "passed": 45
+  },
+  "noticePackages": 141,
+  "deployed": false,
+  "productionRequestsPerformed": false,
+  "hostedCIRunVerified": false,
+  "legalCertification": false,
+  "crossTabRemediation": false,
+  "checks": {
+    "typecheck": "passed",
+    "format": "passed",
+    "build": "passed",
+    "cleanInstallIgnoreScripts": "passed",
+    "cleanNode22_23_4Build": "passed",
+    "releaseArtifactNotices": "passed",
+    "limitedPrivateKeyMarkerScan": "no matches",
+    "sourceMapsInArtifact": "none"
+  },
+  "sources": {
+    "skillsCLI": "https://github.com/vercel-labs/skills/blob/main/README.md",
+    "motionCriterion": "https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html",
+    "nodeLifecycle": "https://nodejs.org/en/about/previous-releases"
+  },
+  "openGates": [
+    "Actual dedicated-origin/DNS/TLS/response-policy verification",
+    "Operator markets/ages/hosting and mailbox retention/legal review",
+    "Direct-write external-OS-writer residual risk acceptance and native picker checks",
+    "Provenance/license supplement review",
+    "Real account MFA/permissions, CI branch protection, alerting, hosted rollback drill",
+    "Real Safari/Firefox/mobile/assistive-technology checks"
+  ],
+  "browserSuites": {
+    "security_browser.py": "passed in local headless Chrome against production preview",
+    "editing_browser.py": "passed in local headless Chrome against production preview",
+    "session_browser.py": "passed in local headless Chrome against production preview",
+    "header_browser.py": "passed in local headless Chrome against production preview",
+    "landing_browser.py": "passed in local headless Chrome against production preview",
+    "browser.py": "passed in local headless Chrome against production preview",
+    "oss_landing_browser.py": "passed in local headless Chrome against production preview",
+    "drop_browser.py": "passed in local headless Chrome against production preview"
+  },
+  "securityBrowserChecks": [
+    "bounded old/new draft acknowledgements",
+    "typing during pending Apply",
+    "example replacement preserves applied files and draft",
+    "discarded draft marker absent from active records",
+    "multibyte size limit before storage/preview",
+    "unknown schema recovery JSON and reset",
+    "tab-only storage",
+    "privacy notice/contact",
+    "large ZIP over compression-worker threshold with no CSP/page errors",
+    "no external page requests"
+  ],
+  "lockfileSha256": "c1c0ef7c060f913d17eeda844ab17c413a5ca0bc22b4878ba8a579282955d0ae",
+  "finalSourceHashes": {
+    "src/App.tsx": "b8ea436f3a319792e84c41b683aa5e9ef61b5730aad7f13585bfacee2094feea",
+    "src/components/AppRecovery.tsx": "9f88b28de93a55239ffd747fdaad62ee8557dd8af9ff1a7eaa01648e6461a3e5",
+    "src/components/CopyBlock.tsx": "107c6a98f2ac2355445e744a8b37e54d177c9508d8eb2bfe2394876c57d01775",
+    "src/components/Icon.tsx": "4cd931368d619a00aed67a67475faa8282f6f2e5bd4f3f56fbdb20610c61f41a",
+    "src/components/LandingPage.tsx": "3c7445d8044badc2d7eebf3648d829b1fa8826f8d4204642d12ede315576f194",
+    "src/components/LandingTree.tsx": "1e3962020e3be556275f8475dbe86cf871a781d98a3b9ad561999d906719e933",
+    "src/components/Markdown.tsx": "2561e6d3701ae0d3afa0c84fd835b4d673690932ee83cb6e5c065e5cb849423d",
+    "src/components/Modal.tsx": "f7298b551b2e93f0eb878804d8d4db28e3c0cef87ff154c1c1460d547a2912f0",
+    "src/components/NodeEditor.tsx": "4f0847cecae6e4cab8420f290eb328aaab209fde5a45fe5d8e1d30a561593360",
+    "src/components/Outline.tsx": "b90404b3c6c99b5577a06fb9adfb3d7b87089bead5713884682caf63f2670353",
+    "src/components/PrivacyNotice.tsx": "6ddbb5c3e5a2b7631fc1fc7cac33dd46f26d1617415fecab3c21957cc4afd877",
+    "src/components/Workspace.tsx": "8764fbee263231ddd4bc63d8be5325272b06a70002ec15fbd164ef0c3aee4f8d",
+    "src/components/WorkspaceBoundary.tsx": "510475b978c738b343fbb10deaffc78963183137e1845c1089e2d3d302629398",
+    "src/lib/documents.test.ts": "f23c1ea1947e30c8ae6ff24051bf587f9374268dfe6f132309aa64437df2b4c0",
+    "src/lib/documents.ts": "f3a3444ca0b7c5eca8b75a1ca535147b543fdc0f56a1096e4031f0df663e78c1",
+    "src/lib/drop.test.ts": "fb45719801fd0d8946e644ae1d8f6be190faf77977a9dd3b3c8da97cbb0e634b",
+    "src/lib/drop.ts": "5038aa273b5489f01b6690b63ff12116029c0ca6674a9b8535aeee03f354221c",
+    "src/lib/edit-worker.ts": "ab6fa5f6c2abd91e6092e90b4ce1666bdf08b42669a6807f6a4c6602a81f5c5e",
+    "src/lib/edit.worker.ts": "7c673e1834e1080b2004487fc5f76f6e058d54b7a319807fd03f6075d2ec59e4",
+    "src/lib/editing.test.ts": "370f747c851ba9faf9bd00dee0250063d7d7565188f8aa38d5d1ba3f1afb2211",
+    "src/lib/editing.ts": "c890a65d3eda4c3be8572ccff6d902f2a43f4dc84c82f6ffe159a0a3508c3529",
+    "src/lib/export.ts": "53be45de71326babcdba2cff9d46125eddb73329772b7f6e33d7619a4c765774",
+    "src/lib/folder-access.test.ts": "6b3f1f96961017ced1bda80db33a35307bd77594244ac760a88d928867f20368",
+    "src/lib/folder-access.ts": "44d6fc474c69134652bc3887ac873bd235ac57673c1ff89c21238258d8f42b75",
+    "src/lib/packs.test.ts": "3e1c54daa70d4b1ee408bd9c04976f7e408b21c8d2f6cd80bcc424a6e267e9b9",
+    "src/lib/parser.worker.ts": "720b277c51fcef12998c473da22fceecb1a2988c6ac8e4347009e2afe1ec6a2f",
+    "src/lib/saved-state.test.ts": "0f491035848d2d68cea6899cc7c7c4d29275de39685400be9a3fd7652e2f0b3c",
+    "src/lib/saved-state.ts": "37406eeab968720471c8fc7274c7273176e40aa31183fb9897bcf09f9cce7b92",
+    "src/lib/session.ts": "ef1d9c074aee341102f91faf1433fcd9a003abc31fddc38c99a3abe2ed7c4fe4",
+    "src/lib/tree.test.ts": "2e14990f0b3cc2d181c6be5af377ab8811e85125f85a7571cfa388780702d279",
+    "src/lib/tree.ts": "2855a096b544fbc84e76552a9c394d62b0218a91db9766c347defd5ccf8c308f",
+    "src/main.tsx": "66c0d5182ae82f794d5284dd9e90966f13a8ba79f4182f266feed34812215c65",
+    "src/style.css": "966a0717e46dc14592452b998fffa0dab960d73d1123eeaa3fff51356e83d437"
+  }
+}

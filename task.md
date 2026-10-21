@@ -1060,3 +1060,7 @@ This replaces the earlier question-only restriction. The skill is general: topic
 - [x] Make browser-save and disk/export status distinct; protect modified workspaces and drafts from silent replacement.
 - [x] Keep mobile editor actions visible and make short windows scrollable.
 - [x] Test editing/link generation, file conflicts, denied permission, partial writes, draft recovery, actual ZIP contents, native browser file handles, browser fallback, and add-control layout.
+
+### 23.19 Pre-launch remediation (22 October 2026)
+
+The owner authorized fixes for all audit findings except concurrent-tab conflicts (AUD-001/T01). The later Apache-2.0, Ethernode/contact and dedicated-origin decisions are recorded in [the remediation completion record](docs/remediation-2026-10-22.md), with residual and external gates listed explicitly. This section supersedes older requirements for no in-page motion control and unconditional browser retention: the landing now has a subtle keyboard-accessible pause/resume control and a Remember/tab-only choice. No multi-tab merge/CAS was added and no production deployment is included. See the release runbook for actual hosting, rollback, monitoring and legal/operator review steps.
