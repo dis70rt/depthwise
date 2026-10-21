@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 /** A small, repeatable demonstration of the real focus-before-expand flow. */
 export function LandingTree() {
   const host = useRef<HTMLElement>(null);
+  const [paused, setPaused] = useState(false);
   const [visible, setVisible] = useState(true);
   const [pageVisible, setPageVisible] = useState(!document.hidden);
   useEffect(() => {
@@ -23,7 +24,7 @@ export function LandingTree() {
     <figure className="landing-tree" ref={host}>
       <div
         className="landing-tree-viewport"
-        data-paused={!visible || !pageVisible}
+        data-paused={paused || !visible || !pageVisible}
       >
         <svg
           className="landing-tree-scene"
@@ -236,7 +237,16 @@ export function LandingTree() {
           </g>
         </svg>
       </div>
-      <figcaption>Open a question. Reveal what comes next.</figcaption>
+      <figcaption>
+        <span>Open a question. Reveal what comes next.</span>
+        <button
+          className="demo-motion-control"
+          aria-pressed={paused}
+          onClick={() => setPaused((value) => !value)}
+        >
+          {paused ? "Resume animation" : "Pause animation"}
+        </button>
+      </figcaption>
     </figure>
   );
 }

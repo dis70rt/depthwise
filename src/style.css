@@ -2528,6 +2528,66 @@ h3 {
   }
 }
 
+.import-privacy {
+  margin-top: 16px;
+  max-width: 460px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.import-privacy label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  color: var(--text);
+  line-height: 1.5;
+}
+.import-privacy input {
+  margin-top: 4px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--text);
+  flex-shrink: 0;
+}
+.import-privacy p {
+  margin-top: 8px;
+  line-height: 1.6;
+}
+.import-privacy .text-link {
+  font-size: inherit;
+}
+.landing-tree figcaption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.demo-motion-control {
+  font-size: 14px;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  padding: 6px 0;
+}
+.demo-motion-control:hover {
+  color: var(--text);
+}
+.privacy-details {
+  line-height: 1.7;
+  color: var(--muted);
+}
+.privacy-details h3 {
+  color: var(--text);
+  font-size: 20px;
+  margin: 24px 0 8px;
+}
+.privacy-details p + p {
+  margin-top: 12px;
+}
+.privacy-details a {
+  color: var(--blue);
+  text-decoration: underline;
+}
 .workspace-recovery {
   max-width: 760px;
   margin: auto;
@@ -2558,47 +2618,4 @@ input:disabled {
   border-radius: 6px;
   font-size: 16px;
   line-height: 1.5;
-}
-.import-privacy {
-  margin-top: 16px;
-  max-width: 460px;
-  font-size: 14px;
-  color: var(--muted);
-}
-.import-privacy label {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  color: var(--text);
-  line-height: 1.5;
-}
-.import-privacy input {
-  margin-top: 4px;
-  width: 16px;
-  height: 16px;
-  accent-color: var(--text);
-  flex-shrink: 0;
-}
-.import-privacy p {
-  margin-top: 8px;
-  line-height: 1.6;
-}
-.import-privacy .text-link {
-  font-size: inherit;
-}
-.privacy-details {
-  line-height: 1.7;
-  color: var(--muted);
-}
-.privacy-details h3 {
-  color: var(--text);
-  font-size: 20px;
-  margin: 24px 0 8px;
-}
-.privacy-details p + p {
-  margin-top: 12px;
-}
-.privacy-details a {
-  color: var(--blue);
-  text-decoration: underline;
 }

@@ -21,7 +21,13 @@ with sync_playwright() as p:
     tree=page.locator('.landing-preview').bounding_box()
     assert tree['x'] > intro['x']+intro['width']+20
     assert abs(tree['y']+tree['height']/2-intro['y']-intro['height']/2)<2
-    expect(figure.get_by_role('button')).to_have_count(0)
+    page.get_by_role('button',name='Pause animation',exact=True).focus()
+    page.keyboard.press('Enter')
+    expect(page.locator('.landing-tree-viewport')).to_have_attribute('data-paused','true')
+    assert page.locator('.demo-camera').evaluate('(n)=>getComputedStyle(n).animationPlayState')=='paused'
+    page.get_by_role('button',name='Resume animation',exact=True).focus()
+    page.keyboard.press('Space')
+    expect(page.locator('.landing-tree-viewport')).to_have_attribute('data-paused','false')
     page.evaluate('document.querySelector(".landing-tree").getAnimations({subtree:true}).forEach(a=>a.pause())')
     def seek(ms):
         page.evaluate('(ms)=>document.querySelector(".landing-tree").getAnimations({subtree:true}).forEach(a=>a.currentTime=ms)',ms)
@@ -50,11 +56,11 @@ with sync_playwright() as p:
     page.screenshot(path=str(ART/'landing-second-question-1440.png'))
     returned=seek(8550)
     assert returned['camera']==start['camera'] and returned['height']==80
-    # The quicker sequence repeats without a playback control.
+    # The sequence repeats with an accessible motion control.
     assert page.locator('.demo-camera').evaluate('(n)=>getComputedStyle(n).animationIterationCount')=='infinite'
     assert page.locator('.demo-camera').evaluate('(n)=>getComputedStyle(n).animationDuration')=='9s'
     page.emulate_media(reduced_motion='reduce')
-    expect(page.get_by_role('button',name='Pause tree preview')).to_have_count(0)
+    expect(page.get_by_role('button',name='Pause animation')).to_be_visible()
     assert page.locator('.demo-camera').evaluate('(n)=>getComputedStyle(n).animationName')=='none'
     assert page.locator('.demo-markdown').evaluate('(n)=>getComputedStyle(n).opacity')=='0'
     for width,height in [(1920,1080),(768,900),(390,844)]:
@@ -66,5 +72,5 @@ with sync_playwright() as p:
             page.locator('.landing-tree').scroll_into_view_if_needed()
         page.screenshot(path=str(ART/f'landing-aligned-{width}.png'),full_page=True)
     assert not errors,errors
-    print(json.dumps({'result':'passed','flows':['two-column alignment','focus before expansion','preview and children','second question and deeper branches','return to overview','faster infinite loop','no playback button','reduced motion'],'browser_errors':errors}))
+    print(json.dumps({'result':'passed','flows':['two-column alignment','focus before expansion','preview and children','second question and deeper branches','return to overview','faster infinite loop','keyboard-accessible pause/resume','reduced motion'],'browser_errors':errors}))
     browser.close()
