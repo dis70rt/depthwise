@@ -2537,3 +2537,25 @@ h3 {
 .workspace-recovery button {
   margin: 16px 12px 0 0;
 }
+button:disabled,
+textarea:disabled,
+input:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.operation-progress {
+  position: fixed;
+  z-index: 500;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 12px 18px;
+  color: var(--text);
+  background: var(--surface);
+  border-radius: 6px;
+  font-size: 16px;
+  line-height: 1.5;
+}

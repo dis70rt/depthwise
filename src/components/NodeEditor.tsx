@@ -1,5 +1,10 @@
-import { useMemo, useState } from "react";
-import { parseDocument } from "../lib/documents";
+import { useEffect, useState } from "react";
+import {
+  assertMarkdownSize,
+  LIMITS,
+  parseSourcesInWorker,
+  type Document,
+} from "../lib/documents";
 import type { EditorDraft } from "../lib/editing";
 import { Markdown } from "./Markdown";
 import { Modal } from "./Modal";
@@ -8,6 +13,8 @@ export interface NodeEditorProps {
   draft: EditorDraft;
   open: boolean;
   inline?: boolean;
+  busy?: boolean;
+  persistent?: boolean;
   saving: "saving" | "saved" | "failed";
   error: string;
   onChange: (draft: EditorDraft) => void;
@@ -21,6 +28,8 @@ export function NodeEditor({
   open,
   inline = false,
   saving,
+  busy = false,
+  persistent = true,
   error,
   onChange,
   onClose,
@@ -28,13 +37,34 @@ export function NodeEditor({
   onDiscard,
 }: NodeEditorProps) {
   const [preview, setPreview] = useState(false);
-  const document = useMemo(
-    () =>
-      preview
-        ? parseDocument(draft.path || "draft.md", draft.text, [])
-        : undefined,
-    [preview, draft.path, draft.text],
-  );
+  const [document, setDocument] = useState<Document>();
+  const [previewError, setPreviewError] = useState("");
+  useEffect(() => {
+    setDocument(undefined);
+    setPreviewError("");
+    if (!preview) return;
+    const controller = new AbortController();
+    try {
+      assertMarkdownSize(draft.text);
+      void parseSourcesInWorker(
+        "Preview",
+        [{ path: draft.path || "draft.md", text: draft.text }],
+        0,
+        controller.signal,
+      ).then(
+        (pack) => {
+          if (!controller.signal.aborted)
+            setDocument(pack.documents.values().next().value);
+        },
+        (error) => {
+          if (!controller.signal.aborted) setPreviewError(error.message);
+        },
+      );
+    } catch (error) {
+      setPreviewError((error as Error).message);
+    }
+    return () => controller.abort();
+  }, [preview, draft.path, draft.text]);
   const content = (
     <div
       className={`node-editor no-pan ${inline ? "node-editor-inline" : ""}`}
@@ -46,6 +76,8 @@ export function NodeEditor({
           <label htmlFor="editor-path">New file path</label>
           <input
             id="editor-path"
+            maxLength={LIMITS.pathLength}
+            disabled={busy}
             value={draft.path}
             onChange={(event) =>
               onChange({ ...draft, path: event.target.value })
@@ -57,10 +89,18 @@ export function NodeEditor({
       )}
       <div className="editor-toolbar">
         <div className="editor-tabs" role="group" aria-label="Editor view">
-          <button aria-pressed={!preview} onClick={() => setPreview(false)}>
+          <button
+            disabled={busy}
+            aria-pressed={!preview}
+            onClick={() => setPreview(false)}
+          >
             Write
           </button>
-          <button aria-pressed={preview} onClick={() => setPreview(true)}>
+          <button
+            disabled={busy}
+            aria-pressed={preview}
+            onClick={() => setPreview(true)}
+          >
             Preview
           </button>
         </div>
@@ -68,16 +108,26 @@ export function NodeEditor({
           role="status"
           className={saving === "failed" ? "warning-text" : "editor-status"}
         >
-          {saving === "saved"
-            ? "Draft saved in browser"
-            : saving === "failed"
-              ? "Draft not saved — keep this tab open"
-              : "Saving draft…"}
+          {busy
+            ? "Updating tree…"
+            : !persistent
+              ? "Draft kept in this tab only"
+              : saving === "saved"
+                ? "Draft saved in browser"
+                : saving === "failed"
+                  ? "Draft not saved — keep this tab open"
+                  : "Saving draft…"}
         </span>
       </div>
       {preview ? (
         <div className="editor-preview">
-          {document && <Markdown document={document} navigate={() => {}} />}
+          {document ? (
+            <Markdown document={document} navigate={() => {}} />
+          ) : (
+            <p role={previewError ? "alert" : "status"}>
+              {previewError || "Preparing preview…"}
+            </p>
+          )}
         </div>
       ) : (
         <>
@@ -86,6 +136,7 @@ export function NodeEditor({
           </label>
           <textarea
             id="editor-markdown"
+            disabled={busy}
             autoFocus={inline}
             value={draft.text}
             onChange={(event) =>
@@ -103,20 +154,20 @@ export function NodeEditor({
         </p>
       )}
       <div className="editor-actions">
-        <button className="text-link" onClick={onDiscard}>
+        <button disabled={busy} className="text-link" onClick={onDiscard}>
           Discard draft
         </button>
-        <button className="secondary-button" onClick={onClose}>
+        <button disabled={busy} className="secondary-button" onClick={onClose}>
           Keep draft
         </button>
-        <button className="primary-button" onClick={onApply}>
+        <button disabled={busy} className="primary-button" onClick={onApply}>
           {draft.kind === "add" ? "Add to tree" : "Update tree"}
         </button>
       </div>
       <p className="editor-note">
-        Updates stay in this browser until you save to a folder or download a
-        ZIP. The first H1 supplies the question; other Markdown is yours to
-        format.
+        Updates stay {persistent ? "in this browser" : "in this tab only"} until
+        you save to a folder or download a ZIP. The first H1 supplies the
+        question; other Markdown is yours to format.
       </p>
     </div>
   );

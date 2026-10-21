@@ -16,6 +16,9 @@ with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='depthwise-heade
     results=[]
     for width,height in [(1920,1080),(1440,900),(1280,720),(768,844),(390,844)]:
         page.set_viewport_size({'width':width,'height':height})
+        page.close()
+        page=browser.new_page(viewport={'width':width,'height':height})
+        page.on('pageerror',lambda error:errors.append(str(error)))
         page.goto(BASE+'/?example=database')
         page.wait_for_load_state('networkidle')
         page.wait_for_timeout(1000)
@@ -33,10 +36,11 @@ with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='depthwise-heade
                 const node=document.querySelector(`[data-path="${path}"]`).getBoundingClientRect();
                 const controls=document.querySelector('.canvas-bottom').getBoundingClientRect();
                 const header=document.querySelector('.app-header').getBoundingClientRect();
-                return {top:node.top,bottom:node.bottom,controlsTop:controls.top,headerBottom:header.bottom};
+                const canvas=document.querySelector('.tree-workspace').getBoundingClientRect();
+                return {top:node.top,bottom:node.bottom,controlsTop:controls.top,headerBottom:header.bottom,canvasTop:canvas.top};
             }''',path)
-            assert bounds['top']>=bounds['headerBottom']+16,bounds
-            assert bounds['top']<=bounds['headerBottom']+40,bounds
+            assert bounds['top']>=bounds['canvasTop']+16,bounds
+            assert bounds['top']<=bounds['canvasTop']+40,bounds
             assert bounds['bottom']<=bounds['controlsTop']-8,bounds
             results.append({'width':width,'path':path,**bounds})
         if width<=1100:

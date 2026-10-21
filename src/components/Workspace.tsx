@@ -133,6 +133,15 @@ function FileNode({
   const reduced = useReducedMotion();
   const ref = useRef<HTMLElement>(null);
   const scroll = useRef<HTMLDivElement>(null);
+  const editing = Boolean(editor);
+  const wasEditing = useRef(false);
+  useEffect(() => {
+    if (wasEditing.current && !editing && open)
+      ref.current
+        ?.querySelector<HTMLButtonElement>(".node-edit-button")
+        ?.focus({ preventScroll: true });
+    wasEditing.current = editing;
+  }, [editing, open]);
   const nav = useCallback(
     (href: string) => navigate(node.id, href),
     [navigate, node.id],

@@ -42,9 +42,10 @@ with sync_playwright() as p:
     expect(page.locator('.folder-caption')).to_have_text('dropped-learning',timeout=15000)
     expect(page.locator('.file-node[data-path="nested/child.md"]')).to_have_count(1)
     expect(page.locator('.tree-status')).to_contain_text('3 Markdown files')
-    # Failed imports stay on the landing screen with an actionable message.
+    # Reopening restores the session; use Home deliberately before another drop.
     page.goto(BASE)
     page.wait_for_load_state('networkidle')
+    page.get_by_role('link',name='Depthwise home',exact=True).click()
     page.evaluate('''() => {
       const transfer=new DataTransfer();
       transfer.items.add(new File(['hello'],'notes.txt'));
@@ -56,6 +57,7 @@ with sync_playwright() as p:
         page.set_viewport_size({'width':width,'height':844})
         page.goto(BASE)
         page.wait_for_load_state('networkidle')
+        page.get_by_role('link',name='Depthwise home',exact=True).click()
         expect(page.get_by_role('region',name='Markdown folder drop zone')).to_be_visible()
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         page.screenshot(path=str(ART/f'drop-landing-{width}.png'))

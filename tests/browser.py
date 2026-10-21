@@ -36,7 +36,10 @@ def pack_at(parent, name, files):
     return root
 
 def toggle(page, path):
-    file_node(page, path).locator('.node-toggle').click(force=True)
+    # Canvas transforms cannot be scrolled into view by a forced DOM click.
+    page.get_by_role('button',name='Fit visible branches',exact=True).click()
+    settle(page)
+    file_node(page, path).locator('.node-toggle').click()
     settle(page)
 
 with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='depthwise-tests-') as temp:
