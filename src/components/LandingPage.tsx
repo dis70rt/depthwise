@@ -27,12 +27,16 @@ export function LandingPage({
   onBrowse,
   onExample,
   onFormat,
+  onResume,
+  resumeName,
 }: {
   dragActive: boolean;
   busy: boolean;
   onBrowse: () => void;
   onExample: () => void;
   onFormat: () => void;
+  onResume?: () => void;
+  resumeName?: string;
 }) {
   return (
     <div className="landing-page">
@@ -45,6 +49,18 @@ export function LandingPage({
             Explore questions, answers, and ideas as a connected tree. Bring
             your Markdown, or give your AI agent the skill to make it.
           </p>
+          {onResume && (
+            <button
+              className="resume-session-button"
+              onClick={onResume}
+              disabled={busy}
+            >
+              <span>
+                Continue exploring <span aria-hidden="true">→</span>
+              </span>
+              <small>{resumeName}</small>
+            </button>
+          )}
           <div
             className={`folder-dropzone ${dragActive ? "drop-active" : ""}`}
             role="region"

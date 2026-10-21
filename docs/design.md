@@ -12,7 +12,7 @@ Library evaluation: React Flow handles general node-graph interaction, but we do
 
 Geometry: main workspace width = viewport minus 320 px outline on desktop. At narrow widths the outline moves to a dialog. Tree columns use the maximum visible node width at that depth plus a 128 px branch gap. Subtree allocations use an 8 px layout grid; connections use the measured node boundaries. Preview widths adapt to narrow screens, and reading height is capped to avoid filling the vertical workspace with one document.
 
-All import documents stay in browser memory. No document telemetry, remote embeds, storage, or write-back. A refresh starts a new session.
+Imported documents stay in the browser. The latest pack and navigation state persist in IndexedDB; reloads and new tabs automatically resume the saved exploration. Navigation writes are debounced, with a flush when the page becomes hidden. Same-size windows restore the canvas position; changed viewport sizes bring the saved focus into view. Help offers an explicit Forget saved session action. Storage failures show feedback while allowing exploration. No document telemetry, remote embeds, or source-file write-back.
 
 ## Final review
 
@@ -68,3 +68,5 @@ The transform viewport reserves 100px above the workspace bottom for controls an
 The landing page now presents the project source, a copyable skills CLI command for dis70rt/depthwise, and scrollable explanations of the viewer and authoring skill. The hero keeps import actions and the install block in the left column, with the animated tree on the right. The install block sits beneath the main actions. Folder import uses a compact dashed drop target with explicit drag-and-drop and click-to-browse instructions. “Or explore an example tree →” sits below it. The install block is limited to 420px, matching the import control.
 
 The project section explains local Markdown traversal and shows a real source example. The skill section explains how agent instructions turn the user's prompt into connected files, with a copyable example prompt and direct skill download. GitHub links point to the supplied repository. Copy feedback appears only after the clipboard write succeeds; unavailable clipboard access selects the text for manual copying. No installation or command executes from the page.
+
+The logo returns to the landing page without deleting the saved exploration. A Continue exploring button names the folder and restores the preserved view. Refreshing or reopening still automatically resumes the saved workspace.

@@ -9,6 +9,14 @@ import {
   type DragEvent,
 } from "react";
 import { buildPack, importFiles, type Pack } from "./lib/documents";
+import {
+  clearSession,
+  loadSession,
+  saveSession,
+  saveView,
+  type SavedSession,
+  type WorkspaceView,
+} from "./lib/session";
 import { readDroppedFiles } from "./lib/drop";
 import { Icon, Mark } from "./components/Icon";
 import { Modal } from "./components/Modal";
@@ -35,18 +43,12 @@ function examplePack() {
 }
 
 export default function App() {
-  const [session, setSession] = useState<
-    | {
-        pack: Pack;
-        entry: string;
-        mode: "links" | "folders";
-        version: number;
-      }
-    | undefined
-  >(() =>
-    new URLSearchParams(window.location.search).get("example") === "database"
-      ? { pack: examplePack(), entry: "index.md", mode: "links", version: 0 }
-      : undefined,
+  const [session, setSession] = useState<SavedSession & { version: number }>();
+  const [restoring, setRestoring] = useState(true);
+  const [home, setHome] = useState(false);
+  const workspaceOpen = Boolean(session) && !home;
+  const latestView = useRef<{ id: string; view: WorkspaceView } | undefined>(
+    undefined,
   );
   const [candidate, setCandidate] = useState<Pack>();
   const [entry, setEntry] = useState("");
@@ -65,8 +67,78 @@ export default function App() {
     () => "webkitdirectory" in window.document.createElement("input"),
   );
   useEffect(() => () => controller.current?.abort(), []);
+  const storageFailure = useCallback(() => {
+    setError(
+      "Your browser couldn’t save this session. You can keep exploring, but your place may not be restored after closing the tab.",
+    );
+  }, []);
+  useEffect(() => {
+    let cancelled = false;
+    const restore = async () => {
+      try {
+        if (
+          new URLSearchParams(window.location.search).get("example") ===
+          "database"
+        ) {
+          const demo: SavedSession = {
+            id: crypto.randomUUID(),
+            pack: examplePack(),
+            entry: "index.md",
+            mode: "links",
+          };
+          if (cancelled) return;
+          setSession({ ...demo, version: ++sequence.current });
+          void saveSession(demo).catch(storageFailure);
+          window.history.replaceState(null, "", window.location.pathname);
+        } else {
+          const saved = await loadSession();
+          if (saved && !cancelled)
+            setSession({ ...saved, version: ++sequence.current });
+        }
+      } catch {
+        if (!cancelled) storageFailure();
+      } finally {
+        if (!cancelled) setRestoring(false);
+      }
+    };
+    void restore();
+    return () => {
+      cancelled = true;
+    };
+  }, [storageFailure]);
+  const saveWorkspace = useCallback(
+    (view: WorkspaceView) => {
+      if (session) {
+        latestView.current = { id: session.id, view };
+        void saveView(session.id, view).catch(storageFailure);
+      }
+    },
+    [session, storageFailure],
+  );
+  const forgetSession = async () => {
+    try {
+      await clearSession();
+      setSession(undefined);
+      setHelp(false);
+      window.history.replaceState(null, "", window.location.pathname);
+    } catch {
+      setError(
+        "Your browser couldn’t clear the saved session. Please try again.",
+      );
+    }
+  };
   const activate = (pack: Pack, root: string, mode: "links" | "folders") => {
-    setSession({ pack, entry: root, mode, version: ++sequence.current });
+    const next: SavedSession = {
+      id: crypto.randomUUID(),
+      pack,
+      entry: root,
+      mode,
+    };
+    // Queue the folder write before the workspace can start saving navigation.
+    void saveSession(next).catch(storageFailure);
+    latestView.current = undefined;
+    setHome(false);
+    setSession({ ...next, version: ++sequence.current });
     setCandidate(undefined);
     setError("");
   };
@@ -116,7 +188,7 @@ export default function App() {
     event.preventDefault();
     dragDepth.current = 0;
     setDragActive(false);
-    if (session || progress) return;
+    if (workspaceOpen || progress || restoring) return;
     const transfer = event.dataTransfer;
     void select((signal, update) => readDroppedFiles(transfer, signal, update));
   };
@@ -139,20 +211,31 @@ export default function App() {
         Skip to learning workspace
       </a>
       <header
-        className={`app-header ${session ? "app-header-loaded" : "app-header-landing"}`}
+        className={`app-header ${workspaceOpen ? "app-header-loaded" : "app-header-landing"}`}
       >
         <a
           href="./"
           className="brand"
           translate="no"
           aria-label="Depthwise home"
+          onClick={(event) => {
+            if (
+              event.metaKey ||
+              event.ctrlKey ||
+              event.shiftKey ||
+              event.altKey
+            )
+              return;
+            event.preventDefault();
+            setHome(true);
+          }}
         >
           <Mark />
           <span>
             depthwise<span className="brand-period">.</span>
           </span>
         </a>
-        {session ? (
+        {workspaceOpen ? (
           <div id="workspace-header" className="header-workspace" />
         ) : (
           <nav className="landing-nav" aria-label="Project navigation">
@@ -164,7 +247,8 @@ export default function App() {
           </nav>
         )}
         <div className="header-actions">
-          {session &&
+          {workspaceOpen &&
+            session &&
             (session.pack.warnings.length > 0 || session.pack.ignored > 0) && (
               <button
                 className="warning-button"
@@ -187,11 +271,11 @@ export default function App() {
           <button
             className="open-folder-button"
             onClick={() => picker.current?.click()}
-            disabled={Boolean(progress)}
+            disabled={Boolean(progress) || restoring}
           >
             <Icon name="folder" size={16} />
             <span>
-              {session ? "Open another folder" : "Open Markdown folder"}
+              {workspaceOpen ? "Open another folder" : "Open Markdown folder"}
             </span>
           </button>
         </div>
@@ -219,9 +303,10 @@ export default function App() {
       <main
         id="main"
         tabIndex={-1}
-        className={session ? "main-loaded" : "main-empty"}
+        className={workspaceOpen ? "main-loaded" : "main-empty"}
         onDragEnter={(event) => {
-          if (!fileDrag(event) || session || progress) return;
+          if (!fileDrag(event) || workspaceOpen || progress || restoring)
+            return;
           event.preventDefault();
           dragDepth.current++;
           setDragActive(true);
@@ -234,11 +319,16 @@ export default function App() {
         onDragOver={(event) => {
           if (!fileDrag(event)) return;
           event.preventDefault();
-          event.dataTransfer.dropEffect = session || progress ? "none" : "copy";
+          event.dataTransfer.dropEffect =
+            workspaceOpen || progress || restoring ? "none" : "copy";
         }}
         onDrop={drop}
       >
-        {session ? (
+        {restoring ? (
+          <div className="loading-workspace" role="status">
+            Restoring your session…
+          </div>
+        ) : session && !home ? (
           <Suspense
             fallback={
               <div className="loading-workspace" role="status">
@@ -253,16 +343,34 @@ export default function App() {
                 entry={session.entry}
                 mode={session.mode}
                 onHelp={openHelp}
+                initialView={session.view}
+                onSave={saveWorkspace}
               />
             </WorkspaceBoundary>
           </Suspense>
         ) : (
           <LandingPage
             dragActive={dragActive}
-            busy={Boolean(progress)}
+            busy={Boolean(progress) || restoring}
             onBrowse={() => picker.current?.click()}
             onExample={demo}
             onFormat={() => setFormat(true)}
+            resumeName={session?.pack.name}
+            onResume={
+              session
+                ? () => {
+                    setSession({
+                      ...session,
+                      view:
+                        latestView.current?.id === session.id
+                          ? latestView.current.view
+                          : session.view,
+                      version: ++sequence.current,
+                    });
+                    setHome(false);
+                  }
+                : undefined
+            }
           />
         )}
       </main>
@@ -398,9 +506,15 @@ export default function App() {
           </a>
         </div>
         <p className="session-note">
-          Your folder stays in browser memory. Refreshing or closing the tab
-          clears this session; open your folder again to return.
+          Your latest folder and exploring position are saved in this browser.
+          Reopen Depthwise to continue where you left off. Clearing browser data
+          removes the saved session.
         </p>
+        {session && (
+          <button className="text-link" onClick={() => void forgetSession()}>
+            Forget saved session
+          </button>
+        )}
       </Modal>
       <Modal
         open={format}

@@ -47,7 +47,7 @@ These choices make the specification concrete. They are proposals, not claims th
 | Multiple expanded files | Allowed | Enables comparison across neighboring branches |
 | Focus | Exactly one focused file occurrence | Unambiguous right-side outline |
 | Upload processing | Browser-local import | Avoids requiring a backend for reading local documents |
-| Persistence | Current browser session only in the initial version | Keeps initial scope small and explicit |
+| Persistence | Latest folder and exploration saved locally in IndexedDB | Resume after reload or reopening without reimporting |
 | Generic Markdown folders | Import with a clearly identified folder-based fallback | Allows browsing existing notes without the skill |
 | Selected viewport/layout | react-zoom-pan-pinch with a small iterative tree layout | Supports variable-height Markdown and curved connections without graph-editing infrastructure |
 | Mobile | Usable responsive fallback; desktop is the primary target | Horizontal exploration needs space |
@@ -59,7 +59,7 @@ Implementation defaults selected under the instruction to complete this task:
 2. The right outline covers the focused file’s headings. At 1,100px and below it moves into a dialog.
 3. Selecting a child preserves expanded siblings.
 4. Supported limits are 1,000 Markdown files, 1 MiB per file, and 20 MiB total; large-folder checks exercise these boundaries.
-5. Imports remain in memory for the current session. Persistence is outside this version.
+5. Save the latest imported folder and exploration in IndexedDB. Restore expanded branches, focused occurrence, canvas transform, and per-preview reading positions.
 
 ## 4. What the first version excludes
 
@@ -328,9 +328,9 @@ Browser API reference: [MDN directory selection](https://developer.mozilla.org/e
 
 ### 11.3 Session and privacy behavior
 
-- Keep imported documents in memory in the first version.
-- Clearly state that reloading or closing the tab requires reimport.
-- Do not enable persistence or content telemetry without a deliberate product decision.
+- Save the latest imported documents and exploration locally in IndexedDB, as requested.
+- Restore after reload or reopening without reimport; recenter the focused question if viewport dimensions change.
+- Provide Help → Forget saved session, and report storage failures without blocking exploration. Do not add content telemetry.
 - Reading the folder does not modify its files.
 - Do not fetch remote images or embedded resources while previewing imported documents.
 - External hyperlinks remain ordinary user-initiated links with safe browser behavior.
@@ -930,7 +930,7 @@ The implementation is in `src/`, the portable authoring skill is in `skills/dept
 
 ### 23.3 Evidence boundaries
 
-The verified browser engine is desktop Chrome, including 1440px, 768px, and 390px layouts. Other engines and native screen-reader software are not separately certified. This is a browser-local first version; refresh clears the session. No cloud deployment or public publishing is included. These limits preserve the original scope rather than adding new product work.
+The verified browser engine is desktop Chrome, including 1440px, 768px, and 390px layouts. Other engines and native screen-reader software are not separately certified. This is a browser-local first version; refreshing resumes the latest saved session. No cloud deployment or public publishing is included. These limits preserve the original scope rather than adding new product work.
 
 Generated screenshots and machine-readable browser reports live under ignored `artifacts/` and can be reproduced using the checked-in tests. Commit history records verified feature milestones; all staging is scoped to the Depthwise directory in the existing parent repository.
 
@@ -1034,3 +1034,14 @@ This replaces the earlier question-only restriction. The skill is general: topic
 - [x] Use a compact dashed folder drop button with clear drag-and-drop or click-to-browse instructions and subtle drag feedback. Keep “Or explore an example tree →” below the button, and limit the left-side install block to 420px.
 - [x] Add scroll sections explaining the website, ordinary Markdown, the skill file, and the topic-to-folder-to-tree workflow. Keep direct download and folder-format access.
 - [x] Respect reduced motion, preserve local folder import, and keep the main canvas unchanged.
+
+### 23.16 Resume browser exploration
+
+- [x] Save the latest uploaded folder locally in IndexedDB without an account or upload.
+- [x] Restore expanded branches, focused node occurrence, canvas zoom/pan, and Markdown reading positions after reload or reopening. Preserve unlinked-file exploration too.
+- [x] Save navigation separately from the pack, debounce frequent updates, flush on page hiding, and ignore outdated writes from replaced sessions.
+- [x] Recenter the saved question when the viewport changes size.
+- [x] Add Help → Forget saved session and keep importing/exploring available when browser storage fails.
+- [x] Verify persistence with actual browser uploads, reloads, a new tab, mobile resizing, removal, and unavailable storage.
+
+- [x] Keep the home logo usable with a saved session: return to the landing page and offer Continue exploring without losing the current view.

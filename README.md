@@ -2,7 +2,7 @@
 
 Explore a folder of Markdown questions, answers, and notes as a horizontal question tree with curved branches and an active path. Open a question to read its Markdown and reveal its follow-ups. The canvas moves to a question before its preview expands. A heading outline follows the focused file on the right.
 
-Files stay in browser memory. There is no account, backend, answer generation, source-file editing, or document telemetry. Refreshing clears the imported session.
+Files stay in your browser. The latest imported folder, expanded branches, focused question, canvas position, and reading positions are saved locally in IndexedDB, so reopening the site resumes your exploration without another upload. There is no account, backend, answer generation, source-file editing, or document telemetry. Use **Help → Forget saved session** to remove the saved folder; clearing site data also removes it. Browser storage restrictions or eviction can prevent restoration.
 
 ## Run locally
 

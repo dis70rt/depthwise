@@ -161,7 +161,7 @@ h3 {
   scroll-padding-top: 32px;
 }
 .empty-layout {
-  min-height: calc(100dvh - 76px);
+  min-height: auto;
   display: grid;
   align-content: start;
   grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
@@ -169,7 +169,7 @@ h3 {
   align-items: center;
   column-gap: clamp(32px, 5vw, 80px);
   row-gap: 36px;
-  padding: 48px clamp(24px, 6vw, 112px) 32px;
+  padding: clamp(96px, 12vh, 136px) clamp(24px, 6vw, 112px) 24px;
 }
 .empty-intro {
   min-width: 0;
@@ -2153,4 +2153,30 @@ h3 {
 .skill-section-install {
   max-width: 420px;
   margin: 24px 0;
+}
+
+.resume-session-button {
+  display: grid;
+  gap: 4px;
+  width: min(100%, 420px);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--mantle);
+  text-align: left;
+  transition: border-color 180ms ease;
+}
+.resume-session-button:hover {
+  border-color: var(--blue);
+}
+.resume-session-button > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.resume-session-button small {
+  color: var(--subtle);
+  overflow-wrap: anywhere;
 }

@@ -18,6 +18,7 @@ import {
   TransformComponent,
   type ReactZoomPanPinchRef,
 } from "react-zoom-pan-pinch";
+import type { WorkspaceView } from "../lib/session";
 import type { Pack, Document as MarkdownDocument } from "../lib/documents";
 import { findPath, resolveLink, reachable } from "../lib/documents";
 import {
@@ -254,16 +255,22 @@ export function Workspace({
   mode,
   onHelp,
   initialHeading,
+  initialView,
+  onSave,
 }: {
   pack: Pack;
   initialHeading?: string;
+  initialView?: WorkspaceView;
+  onSave?: (view: WorkspaceView) => void;
   entry: string;
   mode: "links" | "folders";
   onHelp: () => void;
 }) {
   const root = mode === "links" ? JSON.stringify([entry]) : "@folder";
-  const [expanded, setExpanded] = useState(() => new Set([root]));
-  const [focused, setFocused] = useState(root);
+  const [expanded, setExpanded] = useState(
+    () => new Set(initialView?.expanded ?? [root]),
+  );
+  const [focused, setFocused] = useState(initialView?.focused ?? root);
   const [opening, setOpening] = useState<string>();
   const destination = useRef<{
     id: string;
@@ -294,7 +301,47 @@ export function Workspace({
   const [scale, setScale] = useState(1);
   const viewport = useRef<ReactZoomPanPinchRef>(null);
   const host = useRef<HTMLDivElement>(null);
-  const scrolls = useRef(new Map<string, number>());
+  const scrolls = useRef(new Map<string, number>(initialView?.scrolls));
+  const viewState = useRef({
+    expanded,
+    focused,
+    viewport: initialView?.viewport,
+    detached: initialView?.detached,
+  });
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const flushSave = useCallback(() => {
+    clearTimeout(saveTimer.current);
+    onSave?.({
+      expanded: [...viewState.current.expanded],
+      focused: viewState.current.focused,
+      viewport: viewState.current.viewport,
+      detached: viewState.current.detached,
+      scrolls: [...scrolls.current],
+    });
+  }, [onSave]);
+  const scheduleSave = useCallback(() => {
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(flushSave, 200);
+  }, [flushSave]);
+  useEffect(() => {
+    viewState.current.expanded = expanded;
+    viewState.current.focused = focused;
+    scheduleSave();
+  }, [expanded, focused, scheduleSave]);
+  useEffect(() => {
+    const hidden = () => {
+      if (window.document.visibilityState === "hidden") flushSave();
+    };
+    window.addEventListener("pagehide", flushSave);
+    window.document.addEventListener("visibilitychange", hidden);
+    return () => {
+      flushSave();
+      window.removeEventListener("pagehide", flushSave);
+      window.document.removeEventListener("visibilitychange", hidden);
+    };
+  }, [flushSave]);
   const pending = useRef<{
     id: string;
     heading?: string;
@@ -487,8 +534,17 @@ export function Workspace({
     return () => window.clearTimeout(handle);
   }, [layout, tree, bringIntoView, reduced, focused, opening]);
   useEffect(() => {
-    pending.current = { id: root, heading: initialHeading, force: true };
-  }, [root, initialHeading]);
+    const saved = initialView?.viewport;
+    const sameSize =
+      saved?.width === window.innerWidth &&
+      saved?.height === window.innerHeight;
+    if (!saved || !sameSize || initialHeading)
+      pending.current = {
+        id: initialView?.focused ?? root,
+        heading: initialHeading,
+        force: true,
+      };
+  }, [root, initialHeading, initialView]);
   useEffect(() => {
     let active = document?.headings[0]?.id ?? "";
     const preview = window.document
@@ -577,10 +633,28 @@ export function Workspace({
     );
     return () => window.clearTimeout(handle);
   }, [tree, reveal, reduced]);
-  const [detached, setDetached] = useState<{
-    path: string;
-    heading?: string;
-  }>();
+  const [detached, setDetached] = useState<
+    | {
+        path: string;
+        heading?: string;
+      }
+    | undefined
+  >(initialView?.detached ? { path: initialView.detached.path } : undefined);
+  useEffect(() => {
+    if (!detached) viewState.current.detached = undefined;
+    else if (viewState.current.detached?.path !== detached.path)
+      viewState.current.detached = { path: detached.path };
+    scheduleSave();
+  }, [detached, scheduleSave]);
+  const saveDetached = useCallback(
+    (view: WorkspaceView) => {
+      if (detached) {
+        viewState.current.detached = { path: detached.path, view };
+        flushSave();
+      }
+    },
+    [detached, flushSave],
+  );
   // Unlinked documents use a separate keyed workspace, preserving the main session.
   const navigate = useCallback(
     (id: string, href: string) => {
@@ -619,8 +693,9 @@ export function Workspace({
   const onSection = useCallback(
     (id: string, heading: string) => {
       if (id === focused) setActiveHeading(heading);
+      scheduleSave();
     },
-    [focused],
+    [focused, scheduleSave],
   );
   const onKey = (event: KeyboardEvent, id: string) => {
     const node = tree.nodes.get(id)!;
@@ -671,6 +746,12 @@ export function Workspace({
           mode="links"
           onHelp={onHelp}
           initialHeading={detached.heading}
+          initialView={
+            initialView?.detached?.path === detached.path
+              ? initialView.detached.view
+              : undefined
+          }
+          onSave={saveDetached}
         />
       </div>
     );
@@ -710,9 +791,9 @@ export function Workspace({
           ref={viewport}
           minScale={0.25}
           maxScale={1.5}
-          initialScale={1}
-          initialPositionX={0}
-          initialPositionY={0}
+          initialScale={initialView?.viewport?.scale ?? 1}
+          initialPositionX={initialView?.viewport?.positionX ?? 0}
+          initialPositionY={initialView?.viewport?.positionY ?? 0}
           limitToBounds={false}
           centerZoomedOut={false}
           wheel={{ step: 0.08, excluded: ["no-pan", "preview"] }}
@@ -730,7 +811,15 @@ export function Workspace({
           onPanningStart={cancelOpening}
           onWheelStart={cancelOpening}
           onPinchStart={cancelOpening}
-          onTransform={(_, state) => setScale(state.scale)}
+          onTransform={(_, state) => {
+            setScale(state.scale);
+            viewState.current.viewport = {
+              ...state,
+              width: window.innerWidth,
+              height: window.innerHeight,
+            };
+            scheduleSave();
+          }}
         >
           <TransformComponent
             wrapperClass="transform-wrapper"

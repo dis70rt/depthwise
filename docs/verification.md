@@ -17,7 +17,7 @@ Verified locally on 2026-10-21 (Asia/Kolkata). This records the implementation a
 | Heading outline and fragments | Parsed heading IDs, `Outline`, pending heading navigation | Duplicate-anchor unit tests and browser heading navigation; same parser supplies renderer and outline |
 | Theme, responsiveness, reduced motion | Catppuccin CSS tokens, local fonts, outline dialog, Motion preferences | Browser checks at three widths; reduced-motion fixture; Taste inspector |
 | Inert imported content | Sanitized HAST and explicit link/image components | Browser verifies no script execution or remote image request; sanitizer unit tests |
-| Session behavior and atomic replacement | App-owned session, independent candidate import | Failed imports preserve current pack; successful replacement resets it; reload clears it |
+| Session behavior and atomic replacement | App-owned session, independent candidate import | Failed imports preserve current pack; successful replacement resets it; reload restores the saved session |
 | Portable authoring skill | `skills/depthwise-question-tree/SKILL.md`, downloadable public copy | Skill-creator validator; identical-copy contract test; actual packaged download |
 | Example questions with answers | Database and ecology example folders | Contract tests verify H1 questions, visible answer paragraphs, one parent, and full reachability |
 | Large folders and interruptibility | Batched reads, worker parse, memoized workspace, lazy previews | 1,000-file wide/deep folders, near-total-size import, cancellation, long previews, rapid clicks |
@@ -85,3 +85,5 @@ All 14 example documents now contain ordinary answer paragraphs and supporting s
 ## Project landing and copy controls
 
 The production build and 24 unit tests pass. `tests/oss_landing_browser.py` verifies actual clipboard contents for the installation command and example prompt, success feedback, honest failure handling with selected text, section-anchor scrolling, GitHub links, skill download, responsive overflow, and entry into the real example workspace. Desktop hero and skill-section screenshots and the phone hero were reviewed. The skill-install block lives below the left-column actions; the import area stays compact until a file drag reveals the drop target.
+
+Browser session persistence uses IndexedDB for the latest imported folder and navigation state. `tests/session_browser.py` verifies a real uploaded folder six levels deep, preview scroll restoration, canvas coordinates, a new tab, a changed mobile viewport, explicit removal, and continued exploration when storage is blocked. Existing tests and the production build pass.

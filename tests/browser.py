@@ -189,6 +189,9 @@ with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='depthwise-tests
     reduced.emulate_media(reduced_motion='reduce')
     reduced.goto(BASE)
     reduced.wait_for_load_state('networkidle')
+    expect(reduced.locator('.workspace-shell')).to_be_visible()
+    reduced.get_by_role('button',name='Help and keyboard shortcuts').click()
+    reduced.get_by_role('button',name='Forget saved session').click()
     reduced.get_by_role('button',name='Or explore an example tree').click()
     settle(reduced)
     toggle(reduced,'indexes/index.md')
@@ -198,11 +201,11 @@ with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='depthwise-tests
     skill_response=context.request.get(BASE+'/depthwise-question-tree-SKILL.md')
     assert skill_response.ok
     assert 'name: depthwise-question-tree' in skill_response.text()
-    # Session-only documents are cleared by reload.
+    # Reload resumes the most recently opened folder from this browser.
     page.reload()
-    expect(page.get_by_role('heading', name='Follow the question.')).to_be_visible()
+    expect(page.locator('.folder-caption')).to_contain_text('database-preparation')
     assert not errors, errors
-    result={'result':'passed','browser_errors':errors,'viewports':[1440,768,390], 'flows':['directory upload','inline expansion','heading navigation','remembered descendants','keyboard navigation','zoom controls','dialog focus','atomic failed replacement','second subject','generic folders','cycles','missing links','unlinked navigation','duplicate headings','two-line truncation','inert embeds','size limit','reduced motion','session reset']}
+    result={'result':'passed','browser_errors':errors,'viewports':[1440,768,390], 'flows':['directory upload','inline expansion','heading navigation','remembered descendants','keyboard navigation','zoom controls','dialog focus','atomic failed replacement','second subject','generic folders','cycles','missing links','unlinked navigation','duplicate headings','two-line truncation','inert embeds','size limit','reduced motion','session restore']}
     (ART/'browser-results.json').write_text(json.dumps(result,indent=2))
     print(json.dumps(result,indent=2))
     browser.close()
