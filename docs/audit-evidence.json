@@ -1,0 +1,221 @@
+{
+  "audit_date": "2026-10-21",
+  "mode": "audit only; no remediation",
+  "baseline_commit": "1eb1faa898cbb505a1fd06fbf48ac4ca265e7c8b",
+  "baseline_scope": "Working tree including uncommitted editor/export/filesystem changes",
+  "snapshot_algorithm": "SHA-256 of UTF-8 JSON with sorted keys and separators comma/colon, mapping relative file names to their SHA-256",
+  "snapshot_sha256": "0531773a15757affce1e1635ac9b82708d80f967c314382b6df19abf913139ce",
+  "original_files_sha256": {
+    "task.md": "7626e6da6548e746adfedb48cdf7dfdb3db9487ef77d231bc68af545123361ec",
+    "tsconfig.json": "665813689db1ca4299f5ab1811f94d638d277e2205919c500da6c8b6f5c7ec8e",
+    "README.md": "26e3ea0710925456c3534851c04a0c31f2a7428ccc0ebc941a940ae3265d78fa",
+    "package-lock.json": "461ef5c89235fecfdb031a9e021dab54a1ad73a7f62950239a129f9f579a00a5",
+    "index.html": "75ddbbf60c480ea6fe168d8ea26b7fd42b3d5f07ec2978fdf7774ea27a7e0b58",
+    "vite.config.ts": "af8ae705f036165ae6263327ca1ea5c70fff3e52ba3d70f71bd45856775af406",
+    "package.json": "dd38121450baf08621d9b8b5bc71c38736a4c61e4749e79ecf16fbb0584f9d8b",
+    ".gitignore": "55caf7187f2de8626efd3f2b588b320c55cba6558626cc88ebdaeaeb75c25dee",
+    "tsconfig.tsbuildinfo": "51c4ed5733f0ae2b257608fde2dcd26321e378db96b923a4a226c72c04191e07",
+    "docs/publishing-skill.md": "d8bcc2d44757fed858c78aaf7e8772439e3d8e866c742fecf5ef30ab2316feba",
+    "docs/verification.md": "cf07530d90197b045553d9c14f982203ee2250e49f3dee721a3b15ae49c38d8d",
+    "docs/design.md": "d8f80c4f1e7938d2367cabf4e59409e5d7bdf1c2032dcecdb3f09309b9740925",
+    "public/depthwise-question-tree-SKILL.md": "5285ea56107acdaca27589edf38801755808b01aadbfd135e0a0afe03fe3b65d",
+    "public/favicon.svg": "f131e188cc98889a18d96ae9a3371069a611381a127dbd821051ad6ad9e47291",
+    "tests/requirements.txt": "138ad111e5e3dd2172b9ec90096935f1db369c673e09ba89ab20fa557fbc2db1",
+    "tests/stress_browser.py": "3e02fb33b73217a9a6bbefd821c1b3be4430c58c4f2e805e93e4fce76e165d8d",
+    "tests/drop_browser.py": "00ab21ba56785ca14800986782dc0b05838f366c304df5fe3205928baf450ee1",
+    "tests/readability_browser.py": "0204bce0ddeb46a7ba3d41085e854363f8e2c648d54bb3b4b9a49645246f70cf",
+    "tests/landing_browser.py": "4f8692dc11e26a8cedc2a0386cc4809a13a5760bf544900b64c328a270958a87",
+    "tests/branches_browser.py": "467e9b0a9de9b2b5422f5bdda535f9669367dc3fd22c44191d1db647130166c7",
+    "tests/browser.py": "75dc0698aef7ce3bacf9bfe11116738c851e424af3ddb410f4203f84e70982f4",
+    "tests/header_browser.py": "f7fb2ac8bcbd8aea7d9aff19555acbca86a9d04f7f3e49dfbf58a04f843be709",
+    "tests/oss_landing_browser.py": "7c494e4b1e12b104f9400a853e05d2d654b0d05e90fb347d7806961c5160caef",
+    "tests/session_browser.py": "df284394d33c5cdf3390ac14d4b73b9eb238a364ce6c13e69c3647b6af99695c",
+    "tests/editing_browser.py": "d8cc20ff744898d5504916299d597d5dc76be459e237947dbd1d8a2f13c1dc5f",
+    "src/main.tsx": "64aad8a5e2ed329675bc8169fac97cbb107216390be94a7032fb1909f8307a77",
+    "src/App.tsx": "595427f8e55d43598a4e6da74b47cbfab91fa350c2a8efaaf51a609d320f068d",
+    "src/style.css": "b238f527ecde870836c350532dd92ab0fa9dc37d01720ef04b18e182a6ff64c3",
+    "skills/depthwise-question-tree/SKILL.md": "5285ea56107acdaca27589edf38801755808b01aadbfd135e0a0afe03fe3b65d",
+    "src/lib/folder-access.test.ts": "98a147cc076c9c1df80beb661529cc6a2c13c63656704c2d9466075b5c798e33",
+    "src/lib/drop.ts": "0b2a1d914dd049233b198f311b9e307613b3b174db0ef56cb3b52b9eb55e4195",
+    "src/lib/drop.test.ts": "d7a732d7fb21c43e288a880a91a470b4995d4676b06f24794b70e2ff87da6791",
+    "src/lib/tree.ts": "2855a096b544fbc84e76552a9c394d62b0218a91db9766c347defd5ccf8c308f",
+    "src/lib/documents.ts": "8d670b270c3889717e28f534f573f590aa651e383f67f4a8deabfd445774d373",
+    "src/lib/session.ts": "eaa7557515f55519a12313421c387186f291fe3ed59c339e4082b5896b74f371",
+    "src/lib/editing.ts": "1a6fb6aac386ff20588ee4fb4fce07ccdfebd693472df89586caecd42339da2b",
+    "src/lib/documents.test.ts": "f23c1ea1947e30c8ae6ff24051bf587f9374268dfe6f132309aa64437df2b4c0",
+    "src/lib/tree.test.ts": "2e14990f0b3cc2d181c6be5af377ab8811e85125f85a7571cfa388780702d279",
+    "src/lib/folder-access.ts": "17a94c300d3a26fed241132d3790ad1899a29bd8c09d453d8dec5a931a3b4c9f",
+    "src/lib/export.ts": "53be45de71326babcdba2cff9d46125eddb73329772b7f6e33d7619a4c765774",
+    "src/lib/packs.test.ts": "ee56726a4187e84a2ea439a07b93a6c2ef08f64f927c21ba081c3215b9483b38",
+    "src/lib/editing.test.ts": "370f747c851ba9faf9bd00dee0250063d7d7565188f8aa38d5d1ba3f1afb2211",
+    "src/lib/parser.worker.ts": "720b277c51fcef12998c473da22fceecb1a2988c6ac8e4347009e2afe1ec6a2f",
+    "src/components/WorkspaceBoundary.tsx": "510475b978c738b343fbb10deaffc78963183137e1845c1089e2d3d302629398",
+    "src/components/Workspace.tsx": "8ac0ef784f7cf42d9b1d2981944ac5547c110dd2dbdd3e46f25965b6f7de6c37",
+    "src/components/Markdown.tsx": "2561e6d3701ae0d3afa0c84fd835b4d673690932ee83cb6e5c065e5cb849423d",
+    "src/components/NodeEditor.tsx": "8ad5241d293e6aefb8c19b28e7ea1a7ef3c87e7b42d94522d7f73db241587ab2",
+    "src/components/LandingPage.tsx": "3a4831efe0fefd408dfe4a507d49f22c7285bbec9e626ffc1de6218b2964f9b6",
+    "src/components/Outline.tsx": "b90404b3c6c99b5577a06fb9adfb3d7b87089bead5713884682caf63f2670353",
+    "src/components/LandingTree.tsx": "22e1e60bdc94d6151a59c51b132b5d9b43f3a2a6f470a9d07abde5b5ffe06cb1",
+    "src/components/CopyBlock.tsx": "107c6a98f2ac2355445e744a8b37e54d177c9508d8eb2bfe2394876c57d01775",
+    "src/components/Icon.tsx": "4cd931368d619a00aed67a67475faa8282f6f2e5bd4f3f56fbdb20610c61f41a",
+    "src/components/Modal.tsx": "f7298b551b2e93f0eb878804d8d4db28e3c0cef87ff154c1c1460d547a2912f0",
+    "examples/ecology-preparation/disturbance.md": "55fcbcb77296134a4cc1c7092c5addfc0456a2e1f97357f9ee8ab1cdd58e4114",
+    "examples/ecology-preparation/index.md": "582709e4d4d7468e610b172b01cb1478e26951190c82c6536b563e4c5dac0c7d",
+    "examples/database-preparation/selectivity.md": "6679cf71c8078d67a941d987d2223ad0ef3b2a07e4f6d2f515cf44535d347b2d",
+    "examples/database-preparation/query-planning.md": "245b599f8d7e418419efafc6983046ae69e7bcc578c5785a83a9085b89b54a4e",
+    "examples/database-preparation/index.md": "647b22cf5d70a5aa48dc4470513ecee7c30a8d561d35fe38d47d431e390b9480",
+    "examples/database-preparation/indexes/read-performance.md": "3f0632a4a8e9e4489936c0ef2ce710d47f7c8fbf03f3bfb03d9c38796be9e16e",
+    "examples/database-preparation/indexes/b-tree.md": "5242be9d7e6f17668b68b8f4b38b36d54225164180c7a0fd5d48cb940afd51eb",
+    "examples/database-preparation/indexes/write-cost.md": "77ebf74a347e581fe33cc567a19bf2546ba39fc7a408e71149686092bf34aaf7",
+    "examples/database-preparation/indexes/index.md": "a5dfa52066abd29635f6c9225936d9dae9520255865f3934e4fc9dcda44038d7",
+    "examples/database-preparation/transactions/deadlocks.md": "ab58e4b14d86da8a642042fa0c2e8b4af3aa052601b25bc2525e100f848f1810",
+    "examples/database-preparation/transactions/index.md": "0b6e58e67ed8872a792a53478060c7912011a2336de0dcf18e37255eeb026913",
+    "examples/database-preparation/transactions/isolation.md": "02aab328ccdfcedf6f696c52768a71475fe933d78e8ed8c137aebdd32287bdaa",
+    "examples/ecology-preparation/food-webs/predators.md": "1fd903057d295c520867e661ec29b83a70cbf6e6e2176a2ee51bbb089d34fa2a",
+    "examples/ecology-preparation/food-webs/index.md": "3bfefc09d8ec645505f297a2560403f9b76f7bf9367245f6c72922a952a79737",
+    "public/licenses/jetbrains-mono-OFL.txt": "403581b69dac5cff4079205e01c6b467e56af449ecbd7247693ddb1baafa005b",
+    "public/licenses/atkinson-hyperlegible-next-OFL.txt": "474a034e99845062f661855caaa505880d0e9009deddc2727a92795eab374955"
+  },
+  "original_file_drift": [],
+  "checks": {
+    "existing_unit_tests": {
+      "files": 6,
+      "passed": 35,
+      "command": "node node_modules/vitest/vitest.mjs run --cache=false"
+    },
+    "typescript": {
+      "result": "passed",
+      "command": "node node_modules/typescript/bin/tsc --noEmit --incremental false"
+    },
+    "production_build": {
+      "result": "passed",
+      "command": "node node_modules/vite/bin/vite.js build --outDir /tmp/depthwise-launch-audit-20261021/dist --manifest",
+      "repository_dist_not_rebuilt": true,
+      "public_sourcemaps_in_audit_build": 0
+    },
+    "temporary_in_memory_probes": {
+      "passed": 4,
+      "meaning": "Assertions reproduce overwrite/order/scan behavior and test selected sanitization/traversal; not a security certification"
+    },
+    "existing_header_browser": {
+      "script": "header_browser.py",
+      "external_requests_blocked": [],
+      "result": "failed",
+      "error_type": "AssertionError",
+      "message": "{'top': 149, 'bottom': 658.890625, 'controlsTop': 1001, 'headerBottom': 76}"
+    },
+    "browser_audit": {
+      "cross_tab_lost_update": {
+        "tab_a_change_lost": true,
+        "tab_b_change_present": true
+      },
+      "stale_tab_false_save": {
+        "ui_reports_saved": true,
+        "stored_workspace": "audit-other",
+        "stale_change_not_stored": true
+      },
+      "example_url_replaces_edits": {
+        "replacement_prompt_count": 0,
+        "saved_workspace": "database-preparation",
+        "previous_edit_lost": true
+      },
+      "typing_during_apply": {
+        "new_text_was_typed_while_pending": true,
+        "old_click_version_saved": true,
+        "new_typing_lost": true,
+        "draft_key_removed": true
+      },
+      "discarded_draft_retention": {
+        "discarded_text_remains_in_active_metadata": true,
+        "not_in_current_document": true,
+        "draft_key_removed": true
+      },
+      "hostile_markdown": {
+        "executable_marker": false,
+        "unsafe_elements": 0,
+        "unsafe_hrefs": [],
+        "placeholder_present": true,
+        "external_rel": "noopener noreferrer"
+      },
+      "oversized_draft": {
+        "stored_bytes": 1048597,
+        "preview_rendered": 1
+      },
+      "network": {
+        "blocked_external_attempts": []
+      },
+      "page_errors": []
+    },
+    "supplement": {
+      "same_origin_path_isolation": {
+        "another_path_can_read_saved_document": true,
+        "note": "Local browser origin behavior; no claim that production uses this topology."
+      },
+      "malformed_saved_state": {
+        "app_unmounted": true,
+        "forget_control_available": false,
+        "page_errors": [
+          "Cannot read properties of undefined (reading 'length')"
+        ]
+      }
+    }
+  },
+  "secret_screen": {
+    "current_files": 69,
+    "reachable_history_blobs": 156,
+    "hits_redacted": []
+  },
+  "git_remote_configuration_redacted": [
+    {
+      "host": null,
+      "embedded_username_or_password": false
+    }
+  ],
+  "dependencies": {
+    "locked": 225,
+    "installed": 183,
+    "optional_platform_not_installed": 42,
+    "all_lock_integrity_present": true,
+    "installed_version_mismatches": [],
+    "license_counts_locked": {
+      "OFL-1.1": 2,
+      "MIT": 183,
+      "Apache-2.0": 23,
+      "ISC": 3,
+      "MPL-2.0": 12,
+      "BSD-3-Clause": 1,
+      "0BSD": 1
+    },
+    "advisory_scan": "NOT TESTED: no authorized external request or offline advisory database",
+    "unsupported_status": "NOT VERIFIED",
+    "clean_room_install": "NOT TESTED"
+  },
+  "distribution_licenses": {
+    "shipped_notice_files": [
+      "licenses/jetbrains-mono-OFL.txt",
+      "licenses/atkinson-hyperlegible-next-OFL.txt"
+    ],
+    "font_notice_exact_matches": true,
+    "full_mit_permission_text_in_emitted_js": false,
+    "own_root_license_found": false
+  },
+  "limitations": [
+    "No production/external scanning or third-party advisory requests",
+    "Browser page network restricted to localhost",
+    "No customer data used in probes",
+    "No actual OS filesystem attack or native permission-dialog test",
+    "No complete WCAG, cross-browser, ASVS or legal certification",
+    "Pattern secret screen excludes unreachable objects, archived migration repositories, binary payloads and full provider validation",
+    "Full browser regression suite not re-run; existing header failure preserved"
+  ],
+  "audit_artifacts_only": [
+    "docs/pre-launch-audit.md",
+    "docs/pre-launch-remediation-tasks.md",
+    "docs/audit-dependencies.csv",
+    "docs/audit-evidence.json"
+  ],
+  "no_remediation_implemented": true,
+  "final_original_file_drift": [],
+  "documentation_link_validation_errors": [],
+  "no_existing_application_or_documentation_files_modified": true
+}
