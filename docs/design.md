@@ -38,3 +38,15 @@ The current direction replaces the original terminal branching at the user's req
 Opening awaits react-zoom-pan-pinch's actual transform promise (360ms), then expands the preview and draws new branch strokes (420ms). During measured relayout the focused question stays pinned to its reached screen position. A request token invalidates stale openings after another click, manual pan, zoom, or unmount. Keyboard and Markdown-link navigation share the same opening flow; destinations behind collapsed ancestors materialize their ancestor path before moving to the destination. Reduced motion skips travel and stroke drawing.
 
 Accessibility highlights use the same Catppuccin blue as the active path, replacing purple. The highlighted node border alone indicates focus within its question button and reading preview, without a second outline. Other controls and individual Markdown links retain their keyboard focus indicators.
+
+## Landing-page folder drop
+
+A compact drop area sits beneath the introductory copy. Its folder icon, readable prompt, and browse button make import the main action; a blue border and quiet surface change acknowledge a file drag. The whole landing workspace accepts the drop, so users do not have to aim at the button. A depth counter prevents flicker while the drag crosses nested elements. The picker remains the keyboard and touch equivalent.
+
+Directory traversal captures entries while the drop data store is readable, drains every directory-reader batch, and preserves nested paths using the same contract as directory selection. One folder per drop avoids accidentally merging packs. Existing progress, cancellation, worker parsing, and limits apply; traversal also checks limits before collecting an excessive pack.
+
+## Landing demonstration
+
+The landing content and tree now share a two-column grid, vertically centered in the same row; the footer spans the full grid width. This replaces the previous negative margins that pushed the tree below the import control. At 1100px and below the layout stacks.
+
+The user explicitly requested an infinite loop. A 9-second SVG scene highlights the upper branch, moves to that question, expands its Markdown, and reveals deeper questions, then continues into the B-tree question, expands it and reveals another level, before closing and returning to the overview. Camera travel finishes before expansion. The demonstration uses only questions and follows the actual reading interaction. The user requested removing the play/pause button. Intersection observation and document visibility automatically pause the loop when it is not being viewed; reduced motion shows a static overview. On phones a clipped canvas preserves readable question sizes while the camera travels between them.

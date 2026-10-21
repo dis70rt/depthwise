@@ -13,7 +13,7 @@ npm ci
 npm run dev
 ```
 
-Open the local address printed by Vite, normally `http://127.0.0.1:5173`. Choose **Open Markdown folder** and select a directory. You can also use the built-in example, or open `http://127.0.0.1:5173/?example=database`.
+Open the local address printed by Vite, normally `http://127.0.0.1:5173`. Drop a Markdown folder onto the landing screen, or choose **Open Markdown folder** and select a directory. Folder drops preserve nested paths; drop one folder at a time. You can also use the built-in example, or open `http://127.0.0.1:5173/?example=database`.
 
 ```sh
 npm run check

@@ -65,3 +65,11 @@ The application is ready for local use and a static host. No public deployment, 
 The production build and 18 unit tests pass. The browser acceptance suite passes at 1440, 768, and 390px, including collapse/reopen, keyboard traversal, Markdown links, and reduced motion. `tests/branches_browser.py` records actual animation frames: expansion began at 378ms after 24 collapsed frames during the canvas move; the reached question stayed anchored during relayout. It checks exact ancestor highlighting, interruption by newer clicks, and reduced motion. Desktop and phone screenshots were reviewed. The Taste inspector reported zero failures and one warning: it classifies the initially unfocused connections as a chart without colored data; the active route intentionally receives blue only after a child is focused.
 
 The user requested no duplicate focus outline within a highlighted node, and asked to review before committing. The updated UI remains uncommitted.
+
+## Landing-page drag and drop
+
+The production build and 24 unit tests pass. Six drop-reader tests cover nested paths and multiple directory batches, hidden/dependency exclusions, mixed-root rejection, empty and unreadable entries, cancellation, limits, and file fallback. The browser integration test imports a nested pack through synthetic drop entries, checks drag-over feedback without child-element flicker, confirms unsupported-drop errors, and captures 1440, 768, and 390px layouts without page overflow or browser errors. Desktop and phone screenshots were reviewed. Native operating-system drag gestures require manual verification; the automated browser test supplies synthetic directory entries.
+
+## Landing alignment and animation
+
+`tests/landing_browser.py` checks side-by-side alignment at 1440px, seeks the actual CSS animations to verify that the camera reaches the question while it is still collapsed, checks the expanded Markdown and child branches, verifies the return frame, the 9-second infinite repetition through a second question, absence of playback controls, and reduced motion. It also checks for overflow at 1920, 768, and 390px. Desktop overview and expanded screenshots were reviewed.

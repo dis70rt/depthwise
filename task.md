@@ -307,7 +307,7 @@ Reference: [Catppuccin palette](https://catppuccin.com/palette/).
 - The interface may say “upload,” but in the proposed first version the documents are read locally in the browser and are not sent to an application server.
 - No account or network request is needed to read a folder.
 - Do not claim the app can keep watching the original folder automatically. Reimport is explicit.
-- Directory drag-and-drop is optional progressive enhancement, not the only import method.
+- Directory drag-and-drop is supported on the landing screen, with a highlighted drop area and the folder picker as an equivalent keyboard/touch import method.
 - If directory selection is unavailable, explain the limitation and offer multi-file selection with a warning that hierarchy may be lost. Do not misrepresent that fallback as a complete nested-folder import.
 - A canceled picker changes nothing.
 
@@ -960,3 +960,22 @@ The user replaced the earlier ASCII requirement with a polished curved tree. Thi
 
 - [x] Remove both the custom question tooltip and native title popup from question buttons. Preserve full accessible names and full titles when expanded.
 - [x] Leave changes uncommitted for user review.
+
+### 23.9 Landing-page folder drop
+
+- [x] Add a visible drop area with drag-over and release feedback, matching the dark theme and readable type. Keep the folder-picker button.
+- [x] Accept a single folder, preserve nested paths, and read every directory batch. Ignore hidden directories and node_modules. Reject mixed roots instead of merging unrelated packs.
+- [x] Route drops through existing Markdown validation and import progress/cancellation. Enforce limits while scanning. Files stay in the browser.
+- [x] Handle dropped files when directory entries are unavailable. Keep drag state steady while crossing child elements; reset it on leave, drop, drag-end, or window blur.
+- [x] Add regression coverage for directory batches, nested paths, ignored directories, cancellation, limits, empty/unreadable entries, and unsupported drops.
+
+### 23.10 Aligned, looping landing demonstration
+
+- [x] Replace negative-margin positioning with a balanced two-column layout: import content on the left, demonstration vertically centered on the right, footer spanning both columns. Stack cleanly on narrow screens.
+- [x] Loop a 9-second demonstration of the real interaction: show the tree, highlight the upper branch, pan to its question, then expand its Markdown and reveal two follow-ups. Continue into the B-tree question, expand its preview and reveal another level, then collapse and move back to the original tree without a jump.
+- [x] Keep questions-only copy. Keep landing text and drop controls static and usable during playback.
+- [x] Do not show a play/pause button, as requested. Pause automatically when offscreen or the tab is hidden, and show a static overview under reduced-motion preferences.
+- [x] Keep the mobile canvas at a readable scale and clip its viewport, rather than shrinking all question text.
+- [x] Verify alignment, animation ordering, preview/branch reveal, return state, infinite repetition through two questions, absence of playback controls, reduced motion, and responsive overflow in the browser.
+
+- [x] Remove the extra “A small question can go a long way” caption above the demonstration, per final review.

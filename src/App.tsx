@@ -6,10 +6,13 @@ import {
   useEffect,
   useRef,
   useState,
+  type DragEvent,
 } from "react";
 import { buildPack, importFiles, type Pack } from "./lib/documents";
+import { readDroppedFiles } from "./lib/drop";
 import { Icon, Mark } from "./components/Icon";
 import { Modal } from "./components/Modal";
+import { LandingTree } from "./components/LandingTree";
 import { WorkspaceBoundary } from "./components/WorkspaceBoundary";
 const Workspace = lazy(() =>
   import("./components/Workspace").then((module) => ({
@@ -53,6 +56,8 @@ export default function App() {
   const [warnings, setWarnings] = useState(false);
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
+  const [dragActive, setDragActive] = useState(false);
+  const dragDepth = useRef(0);
   const picker = useRef<HTMLInputElement>(null);
   const controller = useRef<AbortController | null>(null);
   const sequence = useRef(0);
@@ -74,14 +79,25 @@ export default function App() {
       setEntry(root ? "index.md" : pack.documents.keys().next().value!);
     }
   };
-  const select = async (files: File[]) => {
-    if (!files.length) return;
+  const select = async (
+    input:
+      | File[]
+      | ((
+          signal: AbortSignal,
+          progress: (value: string) => void,
+        ) => Promise<File[]>),
+  ) => {
+    if (Array.isArray(input) && !input.length) return;
     controller.current?.abort();
     const task = new AbortController();
     controller.current = task;
     setError("");
     setProgress("Reading Markdown folder…");
     try {
+      const files =
+        typeof input === "function"
+          ? await input(task.signal, setProgress)
+          : input;
       const pack = await importFiles(files, task.signal, setProgress);
       if (!task.signal.aborted) accept(pack);
     } catch (issue) {
@@ -93,6 +109,29 @@ export default function App() {
       }
     }
   };
+  const fileDrag = (event: DragEvent) =>
+    event.dataTransfer.types.includes("Files");
+  const drop = (event: DragEvent) => {
+    if (!fileDrag(event)) return;
+    event.preventDefault();
+    dragDepth.current = 0;
+    setDragActive(false);
+    if (session || progress) return;
+    const transfer = event.dataTransfer;
+    void select((signal, update) => readDroppedFiles(transfer, signal, update));
+  };
+  useEffect(() => {
+    const reset = () => {
+      dragDepth.current = 0;
+      setDragActive(false);
+    };
+    window.addEventListener("dragend", reset);
+    window.addEventListener("blur", reset);
+    return () => {
+      window.removeEventListener("dragend", reset);
+      window.removeEventListener("blur", reset);
+    };
+  }, []);
   const demo = () => accept(examplePack());
   return (
     <div className="app">
@@ -169,6 +208,23 @@ export default function App() {
         id="main"
         tabIndex={-1}
         className={session ? "main-loaded" : "main-empty"}
+        onDragEnter={(event) => {
+          if (!fileDrag(event) || session || progress) return;
+          event.preventDefault();
+          dragDepth.current++;
+          setDragActive(true);
+        }}
+        onDragLeave={(event) => {
+          if (!fileDrag(event)) return;
+          dragDepth.current = Math.max(0, dragDepth.current - 1);
+          if (!dragDepth.current) setDragActive(false);
+        }}
+        onDragOver={(event) => {
+          if (!fileDrag(event)) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = session || progress ? "none" : "copy";
+        }}
+        onDrop={drop}
       >
         {session ? (
           <Suspense
@@ -203,14 +259,32 @@ export default function App() {
                 <br className="desktop-break" /> Turn a folder of Markdown
                 questions into a tree you can explore.
               </p>
-              <button
-                className="primary-button"
-                onClick={() => picker.current?.click()}
-                disabled={Boolean(progress)}
+              <div
+                className={`folder-dropzone ${dragActive ? "drop-active" : ""}`}
+                role="region"
+                aria-label="Markdown folder drop zone"
+                aria-busy={Boolean(progress)}
               >
-                <Icon name="folder" />
-                Open Markdown folder<span aria-hidden="true">↗</span>
-              </button>
+                <div className="dropzone-heading">
+                  <Icon name="folder" size={26} />
+                  <p>
+                    {dragActive
+                      ? "Release to open your folder"
+                      : "Drop your Markdown folder here"}
+                  </p>
+                </div>
+                <p className="dropzone-note">
+                  Nested folders welcome. Only Markdown is imported.
+                </p>
+                <button
+                  className="primary-button"
+                  onClick={() => picker.current?.click()}
+                  disabled={Boolean(progress)}
+                >
+                  <Icon name="folder" />
+                  Open Markdown folder<span aria-hidden="true">↗</span>
+                </button>
+              </div>
               <button
                 className="example-button"
                 onClick={demo}
@@ -223,36 +297,7 @@ export default function App() {
                 Files stay in your browser. No account needed.
               </p>
             </section>
-            <div
-              className="empty-tree"
-              aria-label="Example of a branching question tree"
-            >
-              <div className="empty-tree-label">
-                A small question can go a long way
-              </div>
-              <div className="illustration-root">
-                How do databases find a row?
-              </div>
-              <svg
-                className="illustration-fork"
-                viewBox="0 0 74 188"
-                aria-hidden="true"
-              >
-                <path d="M0 89 C37 89 37 25 74 25 M0 89 C37 89 37 153 74 153" />
-                <path className="sample-active" d="M0 89 C37 89 37 89 74 89" />
-              </svg>
-              <div className="illustration-children">
-                <div>What makes a lookup fast?</div>
-                <div className="illustration-middle">
-                  How does an index work?
-                  <span className="sample-plus">+</span>
-                </div>
-                <div>What are the trade-offs?</div>
-              </div>
-              <p className="illustration-caption">
-                Open a question. Reveal what comes next.
-              </p>
-            </div>
+            <LandingTree />
             <footer className="empty-footer">
               <button onClick={() => setFormat(true)}>
                 <Icon name="file" size={15} />
