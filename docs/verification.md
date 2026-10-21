@@ -19,7 +19,7 @@ Verified locally on 2026-10-21 (Asia/Kolkata). This records the implementation a
 | Inert imported content | Sanitized HAST and explicit link/image components | Browser verifies no script execution or remote image request; sanitizer unit tests |
 | Session behavior and atomic replacement | App-owned session, independent candidate import | Failed imports preserve current pack; successful replacement resets it; reload clears it |
 | Portable authoring skill | `skills/depthwise-question-tree/SKILL.md`, downloadable public copy | Skill-creator validator; identical-copy contract test; actual packaged download |
-| Question-only example output | Database and ecology example folders | Contract tests verify H1 questions, one parent, full reachability, and question-only content; both directories imported in Chrome |
+| Example questions with answers | Database and ecology example folders | Contract tests verify H1 questions, visible answer paragraphs, one parent, and full reachability |
 | Large folders and interruptibility | Batched reads, worker parse, memoized workspace, lazy previews | 1,000-file wide/deep folders, near-total-size import, cancellation, long previews, rapid clicks |
 | Layout recovery | `WorkspaceBoundary` preserves the App-owned pack and offers view reset | Source review of error boundary and preserved session ownership |
 
@@ -73,3 +73,11 @@ The production build and 24 unit tests pass. Six drop-reader tests cover nested 
 ## Landing alignment and animation
 
 `tests/landing_browser.py` checks side-by-side alignment at 1440px, seeks the actual CSS animations to verify that the camera reaches the question while it is still collapsed, checks the expanded Markdown and child branches, verifies the return frame, the 9-second infinite repetition through a second question, absence of playback controls, and reduced motion. It also checks for overflow at 1920, 768, and 390px. Desktop overview and expanded screenshots were reviewed.
+
+## Flexible Markdown and optional answers
+
+All 14 example documents now contain ordinary answer paragraphs and supporting source links. They do not require an Answer heading. The sample contract tests check that the paragraphs render while branch reachability and parent relationships remain intact. Skill and download copies stay identical, and the standalone export was refreshed. The browser acceptance suite passes with answer-bearing examples, including heading navigation; the final-section scroll indicator now handles the bottom of a long preview.
+
+## Header context and canvas clearance
+
+`tests/header_browser.py` verifies that folder context lives in the application header, no duplicate canvas caption remains, and root/child focus sits 24px below the header. It checks that expanded files remain above the controls at 1920×1080, 1440×900, 1280×720, 768×844, and 390×844, with no page overflow. A 250-paragraph file scrolls within its preview on a 720px-high viewport. Mobile Outline still opens from the header. Screenshots at 1280px and 390px were reviewed; the production build and 24 unit tests pass.

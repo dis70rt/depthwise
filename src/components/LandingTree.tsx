@@ -136,14 +136,11 @@ export function LandingTree() {
                   <text className="demo-filepath" x="760" y="205">
                     b-tree.md
                   </text>
-                  <text className="demo-section" x="760" y="240">
-                    Explore
+                  <text className="demo-body" x="760" y="240">
+                    Splits keep leaf levels even.
                   </text>
-                  <text className="demo-body" x="760" y="271">
-                    How are keys kept in order?
-                  </text>
-                  <text className="demo-body" x="760" y="303">
-                    When does a node split?
+                  <text className="demo-body" x="760" y="272">
+                    Parent pages guide the search.
                   </text>
                 </g>
               </g>
@@ -228,14 +225,11 @@ export function LandingTree() {
                 <text className="demo-filepath" x="390" y="175">
                   indexes.md
                 </text>
-                <text className="demo-section" x="390" y="210">
-                  Explore
+                <text className="demo-body" x="390" y="210">
+                  An index narrows the search.
                 </text>
-                <text className="demo-body" x="390" y="241">
-                  What does the index store?
-                </text>
-                <text className="demo-body" x="390" y="273">
-                  What work can it avoid?
+                <text className="demo-body" x="390" y="242">
+                  Fewer rows need checking.
                 </text>
               </g>
             </g>

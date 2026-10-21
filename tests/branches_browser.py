@@ -64,7 +64,8 @@ with sync_playwright() as p:
     expect(page.locator('[data-path="transactions/index.md"] .node-toggle')).to_have_attribute('aria-expanded','true')
     # Immediate reduced-motion state, with no connector drawing animation.
     page.emulate_media(reduced_motion='reduce')
-    page.locator('[data-path="indexes/index.md"] .node-toggle').click(force=True)
+    page.locator('[data-path="indexes/index.md"] .node-toggle').focus()
+    page.keyboard.press('Enter')
     expect(page.locator('[data-path="indexes/index.md"] .node-toggle')).to_have_attribute('aria-expanded','true')
     assert page.locator('.branch-line').first.evaluate('(n)=>getComputedStyle(n).animationName') == 'none'
     for width,height in [(1440,900),(390,844)]:
@@ -72,7 +73,8 @@ with sync_playwright() as p:
         page.goto(BASE+'/?example=database')
         page.wait_for_load_state('networkidle')
         page.wait_for_timeout(600)
-        page.locator('[data-path="indexes/index.md"] .node-toggle').click(force=True)
+        page.locator('[data-path="indexes/index.md"] .node-toggle').focus()
+        page.keyboard.press('Enter')
         page.wait_for_timeout(700)
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         page.screenshot(path=str(ART/f'branches-{width}.png'))

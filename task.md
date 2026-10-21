@@ -29,7 +29,7 @@ The defining experience is a horizontally growing question tree with animated cu
 - [x] Reuse suitable React UI libraries to reduce custom implementation work.
 - [x] Provide an agent skill in concise “caveman” language for generating compatible learning folders.
 - [x] Make that skill's instructions usable with different AI agents, including agents without native skill loading.
-- [x] Keep answers and answer generation outside the current scope.
+- [x] Allow authored answers, explanations, and notes. Keep in-app answer generation outside the current scope.
 - [x] Write this specification now; implement later.
 
 “Caveman” describes the skill's instruction style: short, direct sentences. It does not require broken grammar in learning questions or in the application's interface.
@@ -63,7 +63,7 @@ Implementation defaults selected under the instruction to complete this task:
 
 ## 4. What the first version excludes
 
-- Answers, explanations presented as answers, answer generation, hints that give away solutions, quizzes, scoring, and mastery tracking.
+- In-app answer generation, quizzes, scoring, and mastery tracking. Authored answers and explanations are supported Markdown content.
 - In-app AI chat, model selection, API keys, and server-side generation.
 - In-app Markdown editing, file creation, rename, move, or write-back to the source folder.
 - User accounts, collaboration, sharing links, cloud storage, and publishing.
@@ -73,7 +73,7 @@ Implementation defaults selected under the instruction to complete this task:
 - A full-screen file manager as the central experience.
 - Skill installation into the user's agent configuration during this planning task.
 
-Formatting features such as inline code and code blocks remain available within Markdown. Supporting those features does not mean generating solved examples or answers.
+Formatting features such as inline code and code blocks remain available within Markdown. They may contain authored answers or solved examples; the app itself does not generate them.
 
 ## 5. Primary user journeys
 
@@ -82,7 +82,7 @@ Formatting features such as inline code and code blocks remain available within 
 1. User gives the future skill to their preferred AI agent.
 2. User supplies a topic, learner level, and optional preparation goal or depth.
 3. Agent creates an ordinary folder of `.md` files following the contract below.
-4. Agent checks links, reachability, question quality, and the absence of answers.
+4. Agent checks links, reachability, question quality, and any requested answers.
 5. User saves or downloads the folder and selects it in Depthwise.
 
 Depthwise does not require the generating agent to connect to the app or upload anything itself.
@@ -368,7 +368,7 @@ Each generated file contains:
 
 1. Exactly one H1 containing its primary question.
 2. Optional H2/H3 sections grouping related questions.
-3. Question-only bullet lists where useful.
+3. Question bullet lists where useful, with optional answers and explanations in the body.
 4. An optional reserved H2 named exactly `Follow-up questions` containing child-file links.
 
 Leaf files may omit `Follow-up questions`; an empty reserved section is also allowed.
@@ -463,7 +463,7 @@ Root `index.md` example:
 - Follow-ups should deepen, challenge, apply, compare, or reveal prerequisites for their parent question.
 - Use varied questions about purpose, mechanism, assumptions, trade-offs, failure cases, and application.
 - Avoid unrelated topic expansion merely to make a large tree.
-- Do not embed answers in a question's wording or append explanations after questions.
+- Keep titles phrased as questions. Answers and explanations may appear in the Markdown body, outside the reserved follow-up section.
 - Preserve accurate technical terminology even when skill instructions are terse.
 - As authoring guidance, aim for roughly 2–5 children and 3–8 related questions per file where useful. These are not importer validation limits.
 - Stop at a meaningful preparation boundary. Do not generate an exhaustive encyclopedia by default.
@@ -479,7 +479,7 @@ Root `index.md` example:
 - Extract the right outline from the same parsed document representation used for rendering.
 - Handle skipped heading levels without inventing headings or changing the document.
 - Hide the canonical `Follow-up questions` heading and section contents from previews and outlines. Preserve the source links to generate child branches; navigate follow-ups through those branches.
-- Imported answers, if present in an existing document, are not automatically detected or deleted. The app does not generate answers; the skill produces question-only folders.
+- Answers, explanations, examples, and notes are supported body content. The skill includes them according to the user's prompt; the app renders the authored Markdown and does not generate answers.
 
 ## 14. Reusable React libraries and responsibilities
 
@@ -524,7 +524,7 @@ Skill-use instructions for the implementing agent:
 
 1. Resolve skills from the active environment's skill catalog and read their `SKILL.md` entrypoints before applying them. Use relevant linked references as directed; do not assume these instructions are identical across versions.
 2. Tell the user which skills are being applied when first using them. Apply each skill to the relevant phase rather than loading every skill indiscriminately for every small edit.
-3. Preserve this project's explicit requirements when a skill suggests different defaults. Keep the horizontal question tree, curved branches, blue active path, inline Markdown previews, Catppuccin dark palette, question-only scope, and subtle motion. Do not replace this reading interface with a landing-page composition.
+3. Preserve this project's explicit requirements when a skill suggests different defaults. Keep the horizontal question tree, curved branches, blue active path, inline Markdown previews, Catppuccin dark palette, question-led navigation with optional answers, and subtle motion. Do not replace this reading interface with a landing-page composition.
 4. Use browser and screenshot review to verify the real tree silhouette, connector alignment, expanded text readability, and focus motion. A successful build alone does not establish these visual requirements.
 5. For the authoring skill, keep technical paths, the reserved `Follow-up questions` heading, metadata, and examples exact. Copy refinement must not change the content contract or make caveman instructions ambiguous.
 6. If a named skill is missing in a future environment, report the specific missing skill and continue independent authorized work. Do not claim it was used, install substitutes silently, or change the project scope.
@@ -596,7 +596,7 @@ The deliverable is a folder containing `SKILL.md`. If the entrypoint becomes too
 
 The skill's `SKILL.md` uses standard name/description frontmatter. An agent with native skill support can load it. A person using another agent can paste the instruction body into that agent and request the same output. Native automatic discovery varies between tools; do not promise universal automatic installation or invocation.
 
-Keep the skill outside the generated learning folder. Otherwise `SKILL.md` itself would be imported as learning material. The learning folder contains question documents only.
+Keep the skill outside the generated learning folder. Otherwise `SKILL.md` itself would be imported as learning material. The learning folder contains question-led Markdown documents, with optional answers and notes.
 
 The complete instruction draft below was extracted into the standalone skill and downloadable copy. It was used as a plain instruction document to generate the database and ecology examples, without registering a native skill. Agent-global installation is not required and was not performed.
 
@@ -607,20 +607,24 @@ The outer four-backtick fence preserves the inner Markdown examples. These instr
 ````markdown
 ---
 name: depthwise-question-tree
-description: Create a folder of linked Markdown questions for visual learning in Depthwise. Use when someone wants a question tree or a Depthwise learning folder. Produces questions only, without answers.
+description: Create linked Markdown question trees for Depthwise from topics, notes, or projects. Use for concept exploration, idea development, brainstorming, decisions, or study and interview preparation. Structure progressively deeper follow-ups, with optional answers and explanations suited to the user's prompt.
 ---
 
 # Make question tree
 
 Make folder. Put Markdown inside. User opens folder in Depthwise. App grows question branches.
 
+This skill makes learning material. User asks to build or change app itself? This skill not needed.
+
 ## Know the goal
 
-Read user's topic. Read level. Read preparation goal. Use supplied notes if given.
+Read user's topic and goal. Read level if relevant. Use supplied notes or project details if given. Interviews only one use. Ideas, decisions, brainstorming, and general exploration work too.
 
 Missing detail blocks useful work? Ask short question. Else choose sensible scope. State choice.
 
-User asks topic questions? Write accurate questions. No answers. No hidden answer in question. No long teaching paragraphs.
+Write clear questions. Answers and explanations allowed. User asks questions only? Leave answers out. User asks answers? Include them at requested depth. No preference? Choose a useful format for the goal. Main prompt decides content, detail, tone, and formatting. Do not force an answer heading, fixed section layout, or fixed answer length.
+
+Open-ended idea has no settled answer? Give possible directions and label assumptions. Missing project facts? Ask or state what unknown. Do not invent implementation details.
 
 Keep technical names correct. Caveman style belongs here, in instructions. Learning questions use clear natural language.
 
@@ -630,13 +634,16 @@ Keep technical names correct. Caveman style belongs here, in instructions. Learn
 - Root file named `index.md`.
 - Every learning file ends `.md`.
 - One main question per file. First H1 is that question.
-- Add related questions as bullets. Group with H2/H3 when useful.
+- Follow user's organization for the body. Related questions may use lists or subheadings when useful.
 - Need deeper topic? Make child file.
 - File names lowercase kebab-case. Paths use `/`.
 - Nested folders okay. Folder alone is no learning node.
-- No answers. No JSON manifest. No required frontmatter. No MDX. No wiki links.
+- Body uses normal Markdown. Answers, explanations, examples, notes, and open questions all okay.
+- Use paragraphs, headings, lists, emphasis, code blocks, tables, or blockquotes when useful. Follow user's requested formatting. Do not impose a template beyond the app's navigation structure.
+- No JSON manifest. No required frontmatter. No MDX. No wiki links.
 - No images, PDFs, scripts, or app code in learning folder.
 - Keep this skill outside learning folder.
+- App limits: 1,000 Markdown files, 1 MiB per file, 20 MiB Markdown total. User asks for more? Split into separate learning folders.
 
 ## Connect branches
 
@@ -657,6 +664,8 @@ Link label matches child's H1. Order links by useful learning order.
 
 Leaf has no children? Omit section or leave empty.
 
+Keep content outside reserved Follow-up questions section. App hides that section and shows its links as branches. No Answer heading needed; content can start right under the H1.
+
 Every non-root file gets one branch parent. Every file reachable from root. No cycles. No self-links. No repeated child link.
 
 Need reference across branches? Put ordinary link outside `Follow-up questions`. Do not give file second branch parent.
@@ -671,7 +680,7 @@ Ask why. Ask how. Ask assumptions. Ask trade-offs. Ask failure cases. Ask compar
 
 Child must help explore parent. Do not add unrelated branches for size.
 
-Keep title useful alone. Avoid vague titles like “More” or “Part two”. Avoid giving answer away.
+Keep title useful alone. Avoid vague titles like “More” or “Part two”. Keep title as question; put any answer in body.
 
 Usually few children per file. Usually few related questions inside. Let topic and user decide exact count.
 
@@ -694,6 +703,8 @@ Root `index.md`:
 ```markdown
 # How do databases retrieve data?
 
+A database executes a query plan that reads and combines the required data.
+
 ## Foundations
 
 - What determines the cost of finding a row?
@@ -707,6 +718,8 @@ Root `index.md`:
 
 ```markdown
 # How do database indexes work?
+
+An index stores searchable keys and a way to locate matching rows. It can reduce the work needed for a selective lookup.
 
 ## Explore
 
@@ -723,6 +736,8 @@ Root `index.md`:
 ```markdown
 # Why can an index make writes more expensive?
 
+Writes may update both table data and index entries. Extra indexes can therefore add maintenance work.
+
 ## Trace changes
 
 - What must change when an indexed value changes?
@@ -738,9 +753,9 @@ Root `index.md`:
 - Child label matches target H1.
 - Every file reachable. Each non-root has one branch parent.
 - No cycle. No repeated child. No missing file.
-- Only intended question Markdown in learning folder.
-- No answers or solution paragraphs.
-- Questions fit user's level and goal.
+- Only intended learning Markdown in folder.
+- Answers present or absent as user requested. Keep them outside reserved follow-up section.
+- Questions and any answers fit user's goal and level. Check facts and label uncertainty.
 
 Fix problems before handoff. Say what you actually checked. Do not claim app upload tested unless done.
 
@@ -750,7 +765,7 @@ Can write files? Create folder in user's workspace. Give folder path. State file
 
 Cannot write files? Give folder tree and full contents for each file, labeled by relative path. User can save them.
 
-Finish with short instruction: Open Depthwise. Choose Open Markdown folder. Select generated folder.
+Finish with short instruction: Open Depthwise. Drop generated folder onto landing screen. Or choose Open Markdown folder and select it.
 
 Do not upload, publish, install packages, or call model APIs just to make this folder.
 ````
@@ -769,7 +784,7 @@ Do not upload, publish, install packages, or call model APIs just to make this f
 - Verify relative paths from nested directories, leaf handling, child order, and heading outlines.
 - Try one topic outside computing to confirm the skill is not tied to database examples.
 - Try the instruction body in an agent without native skill discovery; check that manual use remains clear.
-- Verify question-only output and appropriately bounded scope manually.
+- Verify both question-only and question-and-answer output according to the requested mode, with appropriately bounded scope.
 - Keep a compact canonical example as a shared importer/skill compatibility fixture.
 
 ## 19. Implementation task breakdown
@@ -863,7 +878,7 @@ Do not upload, publish, install packages, or call model APIs just to make this f
 - [x] The standalone skill has valid metadata and clear triggering scope.
 - [x] Its instruction body uses short, direct caveman-style language without sacrificing exact format rules.
 - [x] It can produce an uploadable folder from a topic using ordinary files and Markdown links.
-- [x] It produces question-only content and checks links and tree integrity.
+- [x] It follows the requested answer depth and checks links and tree integrity.
 - [x] A person can use the instructions manually with an AI agent that lacks native skill support.
 - [x] Generated output works in the implemented viewer without conversion.
 
@@ -946,7 +961,7 @@ Desktop expanded files are 576px wide, collapsed questions are 336px wide, and t
 
 ### 23.7 Curved branches and focus-first motion
 
-The user replaced the earlier ASCII requirement with a polished curved tree. This supersedes historical references to terminal glyphs. Preserve question-only Markdown import, inline previews, authored ordering, the right outline, Catppuccin dark, and large reading type.
+The user replaced the earlier ASCII requirement with a polished curved tree. This supersedes historical references to terminal glyphs. Preserve Markdown import with optional answers, inline previews, authored ordering, the right outline, Catppuccin dark, and large reading type.
 
 - [x] Rounded question surfaces, curved SVG branches, and quiet connection ports.
 - [x] Highlight the precise root-to-focused occurrence path in blue, including folder fallback.
@@ -973,9 +988,40 @@ The user replaced the earlier ASCII requirement with a polished curved tree. Thi
 
 - [x] Replace negative-margin positioning with a balanced two-column layout: import content on the left, demonstration vertically centered on the right, footer spanning both columns. Stack cleanly on narrow screens.
 - [x] Loop a 9-second demonstration of the real interaction: show the tree, highlight the upper branch, pan to its question, then expand its Markdown and reveal two follow-ups. Continue into the B-tree question, expand its preview and reveal another level, then collapse and move back to the original tree without a jump.
-- [x] Keep questions-only copy. Keep landing text and drop controls static and usable during playback.
+- [x] Demonstrate questions with brief answers. Keep landing text and drop controls static and usable during playback.
 - [x] Do not show a play/pause button, as requested. Pause automatically when offscreen or the tab is hidden, and show a static overview under reduced-motion preferences.
 - [x] Keep the mobile canvas at a readable scale and clip its viewport, rather than shrinking all question text.
 - [x] Verify alignment, animation ordering, preview/branch reveal, return state, infinite repetition through two questions, absence of playback controls, reduced motion, and responsive overflow in the browser.
 
 - [x] Remove the extra “A small question can go a long way” caption above the demonstration, per final review.
+
+### 23.11 skills.sh authoring-skill package
+
+- [x] Check the official skills.sh FAQ, CLI discovery documentation, and Agent Skills specification.
+- [x] Preserve the standard `skills/depthwise-question-tree/SKILL.md` layout and matching YAML name; refine the description for discovery while keeping caveman-style instructions.
+- [x] Sync the app's downloadable skill, document GitHub publication and installation, and export a standalone skill repository ZIP.
+- [x] Preserve the earlier landing-spacing changes separately. No GitHub upload, CLI install, or skills.sh listing has been performed.
+
+### 23.12 Optional answers and broader exploration
+
+This replaces the earlier question-only restriction. The skill is general: topics, notes, projects, ideas, decisions, brainstorming, and preparation can all become question trees. Interview preparation is one example.
+
+- [x] Allow answers, explanations, examples, and notes in ordinary Markdown. Honor explicit requests for questions only or a particular answer depth.
+- [x] Keep H1 questions and authored follow-up links as the navigation structure. Keep answers outside the reserved follow-up section so they remain visible.
+- [x] Add ordinary answer paragraphs to every database and ecology example, with supporting source links and no required Answer heading. These appear in the built-in database tree.
+- [x] Show short answers in both steps of the animated landing preview and in the folder-format sample. Remove the question-only footer claim.
+- [x] Sync the authoring skill, public download, publication guide, and exported package. Update tests to verify visible answers and intact tree links.
+
+### 23.13 Prompt-led Markdown content
+
+- [x] Do not impose an Answer heading or fixed document template. Examples use ordinary paragraphs after the main question.
+- [x] Let the main user prompt determine answers, notes, explanations, depth, tone, and Markdown formatting. Use supported Markdown headings, lists, emphasis, code blocks, tables, and blockquotes as appropriate.
+- [x] Preserve only the app's structural contract: root index.md, primary H1, and relative child links in the reserved follow-up section.
+
+### 23.14 Header context and unobscured canvas focus
+
+- [x] Move the folder breadcrumb, tree title, and orientation line into the application header. Keep mobile Outline available there.
+- [x] Remove duplicate context overlays from the canvas and focus files 24px below its top. Preserve the move-then-expand sequence.
+- [x] Reserve space for bottom controls and status, including safe-area insets. Cap expanded card height and scroll its Markdown body.
+- [x] Use actual available canvas dimensions for focus and fit-view.
+- [x] Check header placement and focused-card clearance at 1920, 1440, 1280, 768, and 390px, including a long document at 720px viewport height.

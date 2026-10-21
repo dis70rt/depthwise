@@ -1,5 +1,9 @@
 # How do ecosystems change over time?
 
+Ecosystems change across seasons and longer timescales as organisms and physical conditions interact. Repeated observations of the same indicators help distinguish short-term variation from a lasting trend.
+
+[National Park Service: monitoring climate change](https://www.nps.gov/articles/denali-monitoring-climate-change.htm).
+
 ## Observe a system
 
 - Which organisms and physical conditions would you record?

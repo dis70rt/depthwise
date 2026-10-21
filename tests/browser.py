@@ -56,6 +56,7 @@ with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='depthwise-tests
     expect(page.locator('.file-node')).to_have_count(4)
     assert page.locator('.file-node').evaluate_all('(nodes) => nodes.map(n => n.dataset.path)') == ['index.md','indexes/index.md','transactions/index.md','query-planning.md']
     expect(file_node(page,'index.md').locator('.node-toggle')).to_have_attribute('aria-expanded','true')
+    expect(file_node(page,'index.md').locator('.preview')).to_contain_text('A database chooses an execution plan')
     page.screenshot(path=str(ART/'tree-desktop.png'))
     # Expanding a child, inline preview, focused outline, and further children.
     toggle(page, 'indexes/index.md')
@@ -72,7 +73,7 @@ with sync_playwright() as p, tempfile.TemporaryDirectory(prefix='depthwise-tests
     # Follow-ups appear only as upcoming branches, not duplicate preview links.
     expect(file_node(page,'indexes/index.md').locator('.preview')).not_to_contain_text('Follow-up questions')
     expect(page.locator('.outline-rail')).not_to_contain_text('Follow-up questions')
-    expect(file_node(page,'indexes/index.md').locator('.preview a')).to_have_count(0)
+    expect(file_node(page,'indexes/index.md').locator('.preview a[href$=".md"]')).to_have_count(0)
     file_node(page,'indexes/index.md').locator('.node-toggle').focus()
     page.keyboard.press('ArrowRight')
     page.keyboard.press('ArrowDown')

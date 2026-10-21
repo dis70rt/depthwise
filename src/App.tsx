@@ -138,7 +138,7 @@ export default function App() {
       <a className="skip-link" href="#main">
         Skip to learning workspace
       </a>
-      <header className="app-header">
+      <header className={`app-header ${session ? "app-header-loaded" : ""}`}>
         <a
           href="./"
           className="brand"
@@ -150,7 +150,11 @@ export default function App() {
             depthwise<span className="brand-period">.</span>
           </span>
         </a>
-        <div className="header-context">a question worth following</div>
+        {session ? (
+          <div id="workspace-header" className="header-workspace" />
+        ) : (
+          <div className="header-context">a question worth following</div>
+        )}
         <div className="header-actions">
           {session &&
             (session.pack.warnings.length > 0 || session.pack.ignored > 0) && (
@@ -307,7 +311,7 @@ export default function App() {
                 <Icon name="download" size={15} />
                 Get the authoring skill
               </a>
-              <span>Questions only. Room to think.</span>
+              <span>Your Markdown. Room to think.</span>
             </footer>
           </div>
         )}
@@ -463,7 +467,7 @@ export default function App() {
           </p>
           <pre>
             {
-              "# How does this work?\n\n## Explore\n- What problem does it solve?\n\n## Follow-up questions\n- [What are the foundations?](foundations.md)"
+              "# How does this work?\n\nStart with a question, then follow links to explore related ideas.\n\n## Explore\n- What problem does it solve?\n\n## Follow-up questions\n- [What are the foundations?](foundations.md)"
             }
           </pre>
           <p>

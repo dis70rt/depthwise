@@ -23,7 +23,7 @@ function readSources(folder: string): Source[] {
 
 describe("portable authoring skill and sample outputs", () => {
   for (const name of ["database-preparation", "ecology-preparation"]) {
-    it(`${name} is a complete, question-only rooted tree`, () => {
+    it(`${name} is a complete rooted tree with visible answer content`, () => {
       const sources = readSources(`examples/${name}`);
       const pack = buildPack(name, sources);
       expect(pack.warnings).toEqual([]);
@@ -33,11 +33,15 @@ describe("portable authoring skill and sample outputs", () => {
         expect(doc.title.endsWith("?")).toBe(true);
         for (const child of doc.children)
           incoming.set(child.target!, (incoming.get(child.target!) ?? 0) + 1);
-        for (const line of doc.raw.split("\n").filter((line) => line.trim())) {
-          expect(line.startsWith("#") || line.startsWith("- ")).toBe(true);
-          if (line.startsWith("- ") && !line.includes("]("))
-            expect(line.endsWith("?")).toBe(true);
-        }
+        const answer = doc.raw.match(/^#[^\n]+\n\n+([^\n]+)/)?.[1];
+        expect(answer).toBeTruthy();
+        // Answers are regular visible Markdown; structural child links still work.
+        expect(JSON.stringify(doc.html)).toContain(answer);
+        expect(
+          doc.headings.some(
+            (heading) => heading.text === "Follow-up questions",
+          ),
+        ).toBe(false);
       }
       expect(incoming.has("index.md")).toBe(false);
       for (const path of pack.documents.keys())
@@ -57,6 +61,6 @@ describe("portable authoring skill and sample outputs", () => {
     );
     expect(skill).toContain("## Follow-up questions");
     expect(skill).toContain("Cannot write files?");
-    expect(skill).toContain("No answers");
+    expect(skill).toContain("Answers and explanations allowed.");
   });
 });

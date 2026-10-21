@@ -1,5 +1,9 @@
 # How do database indexes work?
 
+An index stores searchable keys and a way to locate matching rows. It can avoid scanning an entire table for a selective lookup, but maintaining it adds work when data changes.
+
+[PostgreSQL: indexes](https://www.postgresql.org/docs/current/indexes-intro.html).
+
 ## Purpose
 
 - What problem does an index solve?

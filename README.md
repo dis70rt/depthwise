@@ -1,6 +1,6 @@
 # Depthwise
 
-Explore a folder of Markdown questions as a horizontal question tree with curved branches and an active path. Open a question to read its Markdown and reveal its follow-ups. The canvas moves to a question before its preview expands. A heading outline follows the focused file on the right.
+Explore a folder of Markdown questions, answers, and notes as a horizontal question tree with curved branches and an active path. Open a question to read its Markdown and reveal its follow-ups. The canvas moves to a question before its preview expands. A heading outline follows the focused file on the right.
 
 Files stay in browser memory. There is no account, backend, answer generation, source-file editing, or document telemetry. Refreshing clears the imported session.
 
@@ -28,11 +28,15 @@ npm run preview
 
 Give [the authoring skill](skills/depthwise-question-tree/SKILL.md) to your AI agent along with a topic, preparation goal, and learner level. Native skill installation depends on the agent; with any text-based agent, paste the instruction body and request the complete folder and file contents.
 
-For example: “Create a beginner question tree about operating-system memory management for Depthwise. Use questions only.”
+For example: “Create a beginner question tree about operating-system memory management for Depthwise. Include short answers and deeper follow-up questions.”
 
-The skill uses terse instructions, ordinary `.md` files, and relative links. Keep its own `SKILL.md` outside the learning folder. A downloadable copy is available in the app's empty state and Help dialog.
+The skill uses terse instructions, ordinary `.md` files, and relative links. It supports general exploration, idea development, decisions, and preparation; answers are optional and follow your prompt. Keep its own `SKILL.md` outside the learning folder. A downloadable copy is available in the app's empty state and Help dialog.
 
 The repository includes [database questions](examples/database-preparation/index.md) and [ecology questions](examples/ecology-preparation/index.md). Select either example directory in the folder picker to try an actual import.
+
+## Publish the authoring skill
+
+The skill is ready for the standard skills.sh repository layout at `skills/depthwise-question-tree/SKILL.md`. See [publishing instructions](docs/publishing-skill.md) for the repository structure and install command. The app download contains the same instructions. Publishing the skill does not require publishing the application.
 
 ## Folder format
 
@@ -43,10 +47,13 @@ my-topic/
 └── trade-offs.md
 ```
 
-Each file has a primary question as its H1. Direct bullet links beneath the exact H2 `Follow-up questions` become child branches, in authored order. The viewer hides this structural section from previews and heading outlines because the upcoming branches already show these questions.
+Each file has a primary question as its H1. Its Markdown body can include answers, explanations, examples, and notes. Direct bullet links beneath the exact H2 `Follow-up questions` become child branches, in authored order. The viewer hides this structural section from previews and heading outlines because the upcoming branches already show these questions.
 
 ```markdown
 # How does this work?
+
+
+Start with a question, then follow linked questions to explore related ideas.
 
 ## Explore
 

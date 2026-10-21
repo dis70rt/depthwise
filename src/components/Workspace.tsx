@@ -6,6 +6,7 @@ import {
   useState,
   type KeyboardEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   animate,
   AnimatePresence,
@@ -137,6 +138,13 @@ function FileNode({
     let current = doc.headings[0]?.id ?? "";
     for (const h of scroll.current.querySelectorAll<HTMLElement>("[id]"))
       if (h.getBoundingClientRect().top <= top) current = h.id;
+    // The final section may be too short to reach the top of a long preview.
+    if (
+      scroll.current.scrollHeight > scroll.current.clientHeight &&
+      scroll.current.scrollTop + scroll.current.clientHeight >=
+        scroll.current.scrollHeight - 2
+    )
+      current = doc.headings.at(-1)?.id ?? current;
     onSection(node.id, current);
   };
   return (
@@ -190,6 +198,7 @@ function FileNode({
           <motion.div
             id={`preview-${encodeURIComponent(node.id)}`}
             key="preview"
+            className="node-content"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -274,6 +283,11 @@ export function Workspace({
   );
   const [compact, setCompact] = useState(() => window.innerWidth < 760);
   const [outlineOpen, setOutlineOpen] = useState(false);
+  const [headerHost, setHeaderHost] = useState<HTMLElement | null>(null);
+  useEffect(
+    () => setHeaderHost(window.document.getElementById("workspace-header")),
+    [],
+  );
   const [filesOpen, setFilesOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [activeHeading, setActiveHeading] = useState("");
@@ -286,6 +300,7 @@ export function Workspace({
     heading?: string;
     keyboard?: boolean;
     positioned?: boolean;
+    force?: boolean;
   } | null>(null);
   const reduced = useReducedMotion();
   const tree = useMemo(
@@ -393,23 +408,20 @@ export function Workspace({
       if (!position || !wrapper || !api) return Promise.resolve();
       const { positionX, positionY, scale: zoom } = api.instance.state;
       const width = wrapper.clientWidth;
-      const height = wrapper.clientHeight;
+      const height =
+        api.instance.wrapperComponent?.clientHeight ?? wrapper.clientHeight;
       const left = position.x * zoom + positionX;
       const top = position.y * zoom + positionY;
       const anticipatedWidth = opening ? (compact ? 316 : 576) : position.width;
-      const anticipatedHeight = opening
-        ? Math.min(440, height - 180)
-        : position.height;
+      const anticipatedHeight = opening ? height - 48 : position.height;
       let x = positionX;
       let y = positionY;
       if (force || left < 24 || left + anticipatedWidth * zoom > width - 24)
         x =
           Math.min(80, Math.max(24, (width - anticipatedWidth * zoom) * 0.18)) -
           position.x * zoom;
-      if (force || top < 100 || top + anticipatedHeight * zoom > height - 76)
-        y =
-          Math.max(104, (height - anticipatedHeight * zoom) / 2) -
-          position.y * zoom;
+      if (force || top < 24 || top + anticipatedHeight * zoom > height - 24)
+        y = 24 - position.y * zoom;
       if (Math.abs(x - positionX) < 1 && Math.abs(y - positionY) < 1)
         return Promise.resolve();
       return api.setTransform(x, y, zoom, reduced ? 0 : 360, "easeInOutCubic");
@@ -447,7 +459,7 @@ export function Workspace({
     const handle = window.setTimeout(
       () => {
         if (pending.current !== todo) return;
-        if (!todo.positioned) void bringIntoView(todo.id);
+        if (!todo.positioned) void bringIntoView(todo.id, todo.force);
         const element = window.document.getElementById(
           `node-${encodeURIComponent(todo.id)}`,
         );
@@ -475,7 +487,7 @@ export function Workspace({
     return () => window.clearTimeout(handle);
   }, [layout, tree, bringIntoView, reduced, focused, opening]);
   useEffect(() => {
-    pending.current = { id: root, heading: initialHeading };
+    pending.current = { id: root, heading: initialHeading, force: true };
   }, [root, initialHeading]);
   useEffect(() => {
     let active = document?.headings[0]?.id ?? "";
@@ -666,31 +678,41 @@ export function Workspace({
   return (
     <div className="workspace-shell">
       <div className="tree-workspace" ref={host}>
-        <div className="workspace-caption">
-          <span className="folder-caption">
-            <Icon name="folder" size={15} />
-            {pack.name}
-          </span>
-          <span className="caption-separator">/</span>
-          <h1 className="workspace-title">
-            {mode === "links" ? "Question tree" : "Folder-derived tree"}
-          </h1>
-          <button
-            className="outline-mobile"
-            onClick={() => setOutlineOpen(true)}
-          >
-            <Icon name="outline" />
-            Outline
-          </button>
-        </div>
-        <div className="tree-hint">Follow a question. See where it leads.</div>
+        {headerHost &&
+          createPortal(
+            <>
+              <div className="workspace-context">
+                <div className="workspace-caption">
+                  <span className="folder-caption">
+                    <Icon name="folder" size={15} />
+                    <span className="folder-name">{pack.name}</span>
+                  </span>
+                  <span className="caption-separator">/</span>
+                  <h1 className="workspace-title">
+                    {mode === "links" ? "Question tree" : "Folder-derived tree"}
+                  </h1>
+                </div>
+                <p className="tree-hint">
+                  Follow a question. See where it leads.
+                </p>
+              </div>
+              <button
+                className="outline-mobile"
+                onClick={() => setOutlineOpen(true)}
+              >
+                <Icon name="outline" />
+                Outline
+              </button>
+            </>,
+            headerHost,
+          )}
         <TransformWrapper
           ref={viewport}
           minScale={0.25}
           maxScale={1.5}
           initialScale={1}
           initialPositionX={0}
-          initialPositionY={40}
+          initialPositionY={0}
           limitToBounds={false}
           centerZoomedOut={false}
           wheel={{ step: 0.08, excluded: ["no-pan", "preview"] }}
@@ -713,7 +735,7 @@ export function Workspace({
           <TransformComponent
             wrapperClass="transform-wrapper"
             contentClass="transform-content"
-            wrapperStyle={{ width: "100%", height: "100%" }}
+            wrapperStyle={{ width: "100%" }}
             contentStyle={{ width: layout.width, height: layout.height }}
           >
             <div
@@ -802,18 +824,20 @@ export function Workspace({
               onClick={() => {
                 cancelOpening();
                 const width = host.current?.clientWidth ?? 900;
-                const height = host.current?.clientHeight ?? 600;
+                const height =
+                  viewport.current?.instance.wrapperComponent?.clientHeight ??
+                  600;
                 const zoom = Math.min(
                   1,
                   Math.max(
                     0.25,
                     Math.min(
                       (width - 64) / layout.width,
-                      (height - 130) / layout.height,
+                      (height - 48) / layout.height,
                     ),
                   ),
                 );
-                viewport.current?.setTransform(24, 70, zoom, reduced ? 0 : 280);
+                viewport.current?.setTransform(24, 24, zoom, reduced ? 0 : 280);
               }}
             >
               <Icon name="fit" />

@@ -49,4 +49,16 @@ Directory traversal captures entries while the drop data store is readable, drai
 
 The landing content and tree now share a two-column grid, vertically centered in the same row; the footer spans the full grid width. This replaces the previous negative margins that pushed the tree below the import control. At 1100px and below the layout stacks.
 
-The user explicitly requested an infinite loop. A 9-second SVG scene highlights the upper branch, moves to that question, expands its Markdown, and reveals deeper questions, then continues into the B-tree question, expands it and reveals another level, before closing and returning to the overview. Camera travel finishes before expansion. The demonstration uses only questions and follows the actual reading interaction. The user requested removing the play/pause button. Intersection observation and document visibility automatically pause the loop when it is not being viewed; reduced motion shows a static overview. On phones a clipped canvas preserves readable question sizes while the camera travels between them.
+The user explicitly requested an infinite loop. A 9-second SVG scene highlights the upper branch, moves to that question, expands its Markdown, and reveals deeper questions, then continues into the B-tree question, expands it and reveals another level, before closing and returning to the overview. Camera travel finishes before expansion. The demonstration shows a question with a brief answer at each step, following the actual reading interaction. The user requested removing the play/pause button. Intersection observation and document visibility automatically pause the loop when it is not being viewed; reduced motion shows a static overview. On phones a clipped canvas preserves readable question sizes while the camera travels between them.
+
+The desktop hero row uses its content height instead of stretching to fill the viewport. This moves both columns upward together by roughly 60px at 1440×900, while the footer remains at the bottom. Narrow-screen spacing stays as before.
+
+## Optional authored answers
+
+Question-led navigation remains the structure, while file bodies may contain answers, explanations, examples, or exploratory notes. The skill follows the user's requested answer depth and supports open-ended thinking as well as preparation. The app remains a local Markdown viewer; it does not generate answers. Example documents place answer paragraphs directly in the Markdown body, with supporting source links. No Answer heading or fixed content template is required. The hidden Follow-up questions section remains structural only.
+
+## Workspace context in the header
+
+The imported folder name, tree mode, and short orientation line live in the main application header instead of overlaying the canvas. A header portal keeps the context and Outline action attached to the active workspace, including detached files. Tablet and phone headers wrap the context into a compact second row; the phone omits the helper sentence.
+
+The transform viewport reserves 100px above the workspace bottom for controls and session status, including safe-area spacing. Focus navigation places the question 24px below the canvas top before expansion. Expanded cards use the available workspace height, with flex layout shrinking the scrollable Markdown area while preserving the question, file path, and collapse footer. Long files therefore scroll without covering the bottom controls. Fit-view uses the actual transform viewport size.
