@@ -2180,3 +2180,350 @@ h3 {
   color: var(--subtle);
   overflow-wrap: anywhere;
 }
+
+.main-loaded {
+  display: flex;
+  flex-direction: column;
+}
+.workspace-container {
+  flex: 1;
+  min-height: 0;
+}
+.workspace-savebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  padding: 10px 28px;
+  border-bottom: 1px solid var(--surface);
+  background: var(--mantle);
+  font-size: 14px;
+  color: var(--muted);
+}
+.workspace-savebar > div {
+  display: flex;
+  gap: 20px;
+}
+.workspace-savebar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  color: var(--muted);
+}
+.workspace-savebar button:hover {
+  color: var(--text);
+}
+.savebar-detail {
+  color: var(--subtle);
+}
+.modal-wide {
+  width: min(900px, calc(100vw - 32px));
+}
+.node-editor {
+  min-width: 0;
+}
+.node-editor > label {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+.node-editor input,
+.node-editor textarea {
+  width: 100%;
+  color: var(--text);
+  background: var(--mantle);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: 16px/1.7 var(--mono);
+  padding: 10px 12px;
+}
+.node-editor textarea {
+  display: block;
+  min-height: 260px;
+  height: min(42dvh, 480px);
+  resize: vertical;
+  tab-size: 2;
+}
+.node-editor input[readonly] {
+  color: var(--muted);
+}
+.editor-toolbar,
+.editor-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+}
+.editor-toolbar {
+  margin: 20px 0 12px;
+}
+.editor-tabs {
+  display: flex;
+  gap: 16px;
+}
+.editor-tabs button {
+  font-size: 16px;
+  padding: 6px 0;
+  color: var(--subtle);
+  border-bottom: 2px solid transparent;
+}
+.editor-tabs button[aria-pressed="true"] {
+  color: var(--text);
+  border-color: var(--blue);
+}
+.editor-status {
+  color: var(--subtle);
+  font-size: 14px;
+}
+.editor-preview {
+  height: min(42dvh, 480px);
+  min-height: 260px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  padding: 20px;
+  border-radius: 6px;
+}
+.editor-actions {
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+.editor-actions > :first-child {
+  margin-right: auto;
+}
+.editor-note {
+  color: var(--subtle);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 16px;
+}
+.editor-error {
+  color: var(--red);
+  font-size: 15px;
+  line-height: 1.6;
+  margin-top: 14px;
+}
+.secondary-button {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 12px 16px;
+  font-size: 16px;
+  color: var(--text);
+}
+.secondary-button:hover {
+  background: var(--surface);
+}
+.save-options {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+}
+.save-options > p {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.65;
+  margin-bottom: 12px;
+}
+.save-options .editor-error {
+  color: var(--red);
+}
+.save-options .warning-text {
+  color: var(--yellow);
+}
+@media (max-width: 759px) {
+  .workspace-savebar {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+  .savebar-detail {
+    display: none;
+  }
+  .workspace-savebar > div {
+    gap: 12px;
+  }
+  .modal-wide {
+    padding: 22px 18px;
+    max-height: 92dvh;
+  }
+  .node-editor textarea {
+    min-height: 220px;
+    font-size: 15px;
+  }
+  .editor-actions {
+    gap: 10px;
+  }
+  .editor-actions .text-link {
+    width: 100%;
+    text-align: left;
+  }
+}
+
+/* Keep editing actions visible while the Markdown area takes the remaining height. */
+.modal:has(.node-editor) {
+  display: flex;
+  flex-direction: column;
+  height: min(880px, calc(100dvh - 48px));
+  max-height: none;
+  overflow: hidden;
+}
+.modal:has(.node-editor) > h2,
+.modal:has(.node-editor) > p {
+  flex-shrink: 0;
+}
+.node-editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.node-editor > label,
+.node-editor input,
+.editor-toolbar,
+.editor-actions,
+.editor-note,
+.editor-error {
+  flex-shrink: 0;
+}
+.node-editor textarea,
+.editor-preview {
+  flex: 1;
+  min-height: 100px;
+  height: auto;
+  resize: none;
+}
+@media (max-width: 759px) {
+  .modal:has(.node-editor) {
+    height: calc(100dvh - 24px);
+  }
+  .node-editor textarea {
+    font-size: 16px;
+  }
+  .modal:has(.node-editor) > p {
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+  .editor-note {
+    margin-top: 12px;
+    font-size: 13px;
+  }
+}
+@media (max-height: 700px) {
+  .modal:has(.node-editor) {
+    display: block;
+    height: auto;
+    max-height: calc(100dvh - 24px);
+    overflow: auto;
+  }
+  .node-editor textarea,
+  .editor-preview {
+    flex: none;
+    min-height: 180px;
+    height: 180px;
+  }
+}
+
+.node-footer .node-edit-button {
+  color: var(--text);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 6px 12px;
+  border-radius: 5px;
+  gap: 7px;
+  font-size: 15px;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease;
+}
+.node-footer .node-edit-button:hover {
+  border-color: var(--muted);
+  background: #3b3e54;
+}
+.branch-add {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--subtle);
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+.branch-add:hover,
+.branch-add:focus-visible {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--mantle);
+}
+.branch-add-line {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-linecap: round;
+}
+
+/* Editing stays in the expanded branch, with the actions outside the scroll area. */
+.node-editor-inline {
+  padding: 0 20px 16px;
+  gap: 12px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.node-editor-inline .editor-toolbar {
+  margin: 0;
+  gap: 4px 16px;
+}
+.node-editor-inline .editor-status,
+.node-editor-inline .warning-text {
+  font-size: 13px;
+}
+.node-editor-inline textarea,
+.node-editor-inline .editor-preview {
+  flex: 1 0 180px;
+  height: clamp(180px, 30dvh, 340px);
+  min-height: 180px;
+  font-size: 16px;
+}
+.node-editor-inline .editor-preview {
+  padding: 12px;
+}
+.node-editor-inline .editor-actions {
+  margin: 0;
+  gap: 8px 12px;
+}
+.node-editor-inline .editor-actions button {
+  font-size: 14px;
+}
+.node-editor-inline .primary-button,
+.node-editor-inline .secondary-button {
+  padding: 9px 12px;
+}
+.node-editor-inline .editor-note,
+.node-editor-inline .editor-error {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+@media (max-width: 759px) {
+  .node-editor-inline {
+    padding: 0 16px 14px;
+  }
+  .node-editor-inline .editor-actions .text-link {
+    width: auto;
+  }
+}

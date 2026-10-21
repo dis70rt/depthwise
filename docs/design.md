@@ -12,7 +12,7 @@ Library evaluation: React Flow handles general node-graph interaction, but we do
 
 Geometry: main workspace width = viewport minus 320 px outline on desktop. At narrow widths the outline moves to a dialog. Tree columns use the maximum visible node width at that depth plus a 128 px branch gap. Subtree allocations use an 8 px layout grid; connections use the measured node boundaries. Preview widths adapt to narrow screens, and reading height is capped to avoid filling the vertical workspace with one document.
 
-Imported documents stay in the browser. The latest pack and navigation state persist in IndexedDB; reloads and new tabs automatically resume the saved exploration. Navigation writes are debounced, with a flush when the page becomes hidden. Same-size windows restore the canvas position; changed viewport sizes bring the saved focus into view. Help offers an explicit Forget saved session action. Storage failures show feedback while allowing exploration. No document telemetry, remote embeds, or source-file write-back.
+Imported documents stay in the browser. The latest pack and navigation state persist in IndexedDB; reloads and new tabs automatically resume the saved exploration. Navigation writes are debounced, with a flush when the page becomes hidden. Same-size windows restore the canvas position; changed viewport sizes bring the saved focus into view. Help offers an explicit Forget saved session action. Storage failures show feedback while allowing exploration. No document telemetry or remote embeds. Source files change only through the explicit Save to folder action.
 
 ## Final review
 
@@ -70,3 +70,11 @@ The landing page now presents the project source, a copyable skills CLI command 
 The project section explains local Markdown traversal and shows a real source example. The skill section explains how agent instructions turn the user's prompt into connected files, with a copyable example prompt and direct skill download. GitHub links point to the supplied repository. Copy feedback appears only after the clipboard write succeeds; unavailable clipboard access selects the text for manual copying. No installation or command executes from the page.
 
 The logo returns to the landing page without deleting the saved exploration. A Continue exploring button names the folder and restores the preserved view. Refreshing or reopening still automatically resumes the saved workspace.
+
+## Markdown authoring and save controls
+
+The screen keeps reading first. Edit replaces Collapse at the right of an expanded node footer, using a neutral filled control with clear text contrast. Collapsing remains on the question header. A faint plus and thin branch continuation create a new child: beside a leaf, or below the existing child group. The iterative layout reserves room for these controls, including nested groups, and interpolates their positions with the nodes. Reference and missing nodes do not get creation controls.
+
+The editor uses the existing Catppuccin palette, reading font and monospace source font. Editing existing Markdown happens inside its expanded node, with Write/Preview, draft status, Keep draft, Discard draft and Update tree. Adding a follow-up uses the dialog with a new file path and Add to tree. Collapsing an edited branch keeps its draft; Resume draft reveals and expands the source node. Editor contents scroll in short windows and remain usable on phones. Preview uses the same sanitized rendering as the reader. A single draft persists independently of the applied pack, with atomic pack-update/draft-removal transactions.
+
+A quiet workspace save bar distinguishes browser persistence and modified-file counts. Save & export offers ZIP downloads in every supported reading browser and direct folder saving only when available. Folder writes require user selection/permission, compare against original content, preserve unrelated files, and track remaining changes after partial failure. ZIP work is loaded on demand. Replacing an edited workspace requires an explicit in-product choice.

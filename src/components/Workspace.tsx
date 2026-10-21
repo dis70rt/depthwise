@@ -33,12 +33,15 @@ import { Markdown } from "./Markdown";
 import { Outline } from "./Outline";
 import { Icon } from "./Icon";
 import { Modal } from "./Modal";
+import { NodeEditor, type NodeEditorProps } from "./NodeEditor";
 
 function Branches({
   nodes,
   positions,
   path,
+  additions,
 }: {
+  additions: Map<string, Position>;
   nodes: Map<string, TreeNode>;
   positions: Map<string, Position>;
   path: Set<string>;
@@ -69,6 +72,20 @@ function Branches({
       </g>,
     );
   }
+  for (const [id, target] of additions) {
+    const parent = positions.get(id);
+    if (!parent) continue;
+    const start = parent.x + parent.width;
+    const end = target.x;
+    const bend = Math.max(20, (end - start) * 0.5);
+    edges.push(
+      <path
+        key={`add-${id}`}
+        className="branch-add-line"
+        d={`M ${start} ${parent.center} C ${start + bend} ${parent.center}, ${end - bend} ${target.center}, ${end} ${target.center}`}
+      />,
+    );
+  }
   return (
     <svg className="branches" aria-hidden="true" width="100%" height="100%">
       {edges}
@@ -92,6 +109,8 @@ function FileNode({
   onSection,
   scrolls,
   warningCount,
+  onEdit,
+  editor,
 }: {
   node: TreeNode;
   doc?: MarkdownDocument;
@@ -108,6 +127,8 @@ function FileNode({
   onSection: (id: string, heading: string) => void;
   scrolls: React.RefObject<Map<string, number>>;
   warningCount: number;
+  onEdit?: (path: string, kind: "edit" | "add") => void;
+  editor?: NodeEditorProps;
 }) {
   const reduced = useReducedMotion();
   const ref = useRef<HTMLElement>(null);
@@ -217,28 +238,43 @@ function FileNode({
                 </span>
               )}
             </div>
-            <div
-              className="preview no-pan"
-              ref={scroll}
-              tabIndex={open ? 0 : -1}
-              onScroll={section}
-              role="region"
-              aria-label={`Markdown preview: ${doc.title}`}
-              onPointerDown={() => focus(node.id)}
-              onFocus={() => focus(node.id)}
-            >
-              <Markdown document={doc} navigate={nav} />
-            </div>
-            <div className="node-footer">
-              <span>
-                {doc.children.length
-                  ? `${doc.children.length} follow-up ${doc.children.length === 1 ? "question" : "questions"}`
-                  : "End of this branch"}
-              </span>
-              <button onClick={() => toggle(node.id)}>
-                Collapse <span aria-hidden="true">−</span>
-              </button>
-            </div>
+            {editor ? (
+              <NodeEditor {...editor} inline />
+            ) : (
+              <>
+                <div
+                  className="preview no-pan"
+                  ref={scroll}
+                  tabIndex={open ? 0 : -1}
+                  onScroll={section}
+                  role="region"
+                  aria-label={`Markdown preview: ${doc.title}`}
+                  onPointerDown={() => focus(node.id)}
+                  onFocus={() => focus(node.id)}
+                >
+                  <Markdown document={doc} navigate={nav} />
+                </div>
+                <div className="node-footer">
+                  <span>
+                    {doc.children.length
+                      ? `${doc.children.length} follow-up ${doc.children.length === 1 ? "question" : "questions"}`
+                      : "End of this branch"}
+                  </span>
+                  {onEdit && (
+                    <button
+                      className="node-edit-button"
+                      onClick={() => {
+                        focus(node.id);
+                        onEdit(doc.path, "edit");
+                      }}
+                    >
+                      <Icon name="edit" size={16} />
+                      Edit
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -257,11 +293,15 @@ export function Workspace({
   initialHeading,
   initialView,
   onSave,
+  onEdit,
+  editor,
 }: {
   pack: Pack;
   initialHeading?: string;
   initialView?: WorkspaceView;
   onSave?: (view: WorkspaceView) => void;
+  onEdit?: (path: string, kind: "edit" | "add") => void;
+  editor?: NodeEditorProps;
   entry: string;
   mode: "links" | "folders";
   onHelp: () => void;
@@ -355,11 +395,20 @@ export function Workspace({
     [pack, entry, mode, expanded],
   );
   const layout = useMemo(
-    () => layoutTree(tree, expanded, measured, compact),
-    [tree, expanded, measured, compact],
+    () =>
+      layoutTree(
+        tree,
+        expanded,
+        measured,
+        compact,
+        Boolean(onEdit) && mode === "links",
+      ),
+    [tree, expanded, measured, compact, onEdit, mode],
   );
   const [positions, setPositions] = useState(layout.positions);
   const rendered = useRef(layout.positions);
+  const [addPositions, setAddPositions] = useState(layout.additions);
+  const renderedAdditions = useRef(layout.additions);
   const path = useMemo(
     () => activePath(tree.nodes, focused),
     [tree.nodes, focused],
@@ -384,6 +433,7 @@ export function Workspace({
   }, []);
   useEffect(() => {
     const from = rendered.current;
+    const fromAdditions = renderedAdditions.current;
     const target = layout.positions;
     const animation = animate(0, 1, {
       duration: reduced ? 0 : 0.26,
@@ -406,6 +456,15 @@ export function Workspace({
             anchor.zoom,
             0,
           );
+        const nextAdditions = new Map<string, Position>();
+        for (const [id, to] of layout.additions) {
+          const old = fromAdditions.get(id) ?? to;
+          const x = old.x + (to.x - old.x) * progress;
+          const y = old.y + (to.y - old.y) * progress;
+          nextAdditions.set(id, { ...to, x, y, center: y + 20 });
+        }
+        renderedAdditions.current = nextAdditions;
+        setAddPositions(nextAdditions);
         rendered.current = next;
         setPositions(next);
       },
@@ -576,6 +635,17 @@ export function Workspace({
         return;
       }
       if (expanded.has(id)) {
+        const editing =
+          editor?.open && editor.draft.kind === "edit"
+            ? [...tree.nodes.values()].find(
+                (candidate) =>
+                  candidate.path === editor.draft.parent &&
+                  !candidate.reference &&
+                  !candidate.missing,
+              )
+            : undefined;
+        if (editing && activePath(tree.nodes, editing.id).has(id))
+          editor?.onClose();
         cancelOpening();
         setExpanded((previous) => {
           const next = new Set(previous);
@@ -585,7 +655,7 @@ export function Workspace({
         pending.current = { id, keyboard: true };
       } else void reveal(id);
     },
-    [tree, expanded, reveal, cancelOpening],
+    [tree, expanded, reveal, cancelOpening, editor],
   );
   const openFile = useCallback(
     (path: string, heading?: string, fromId?: string) => {
@@ -655,6 +725,64 @@ export function Workspace({
     },
     [detached, flushSave],
   );
+  const editorPath =
+    editor?.open && editor.draft.kind === "edit"
+      ? editor.draft.parent
+      : undefined;
+  const editorRequest = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!editorPath) {
+      editorRequest.current = undefined;
+      return;
+    }
+    const request = `${compact}:${editorPath}`;
+    if (detached || editorRequest.current === request) return;
+    editorRequest.current = request;
+    const existing = tree.nodes.get(focused);
+    const chain =
+      mode === "links" ? findPath(pack, entry, editorPath) : undefined;
+    if (mode === "links" && !chain) {
+      openFile(editorPath);
+      return;
+    }
+    const ids =
+      mode === "folders"
+        ? [...folderAncestors(editorPath), JSON.stringify([editorPath])]
+        : chain!.map((_, index) => JSON.stringify(chain!.slice(0, index + 1)));
+    const id =
+      existing?.path === editorPath && !existing.reference && !existing.missing
+        ? existing.id
+        : ids.at(-1)!;
+    setExpanded((previous) => new Set([...previous, ...ids, id]));
+    setFocused(id);
+    pending.current = { id, force: true };
+  }, [
+    editorPath,
+    compact,
+    detached,
+    focused,
+    tree,
+    mode,
+    pack,
+    entry,
+    openFile,
+  ]);
+  const editorNode = editorPath
+    ? ([...tree.nodes.values()].find(
+        (node) =>
+          node.id === focused &&
+          node.path === editorPath &&
+          !node.reference &&
+          !node.missing,
+      ) ??
+      [...tree.nodes.values()].find(
+        (node) =>
+          node.path === editorPath &&
+          expanded.has(node.id) &&
+          !node.reference &&
+          !node.missing,
+      ))
+    : undefined;
   // Unlinked documents use a separate keyed workspace, preserving the main session.
   const navigate = useCallback(
     (id: string, href: string) => {
@@ -752,6 +880,8 @@ export function Workspace({
               : undefined
           }
           onSave={saveDetached}
+          onEdit={onEdit}
+          editor={editor}
         />
       </div>
     );
@@ -833,7 +963,12 @@ export function Workspace({
               aria-label="Learning question tree"
               style={{ width: layout.width, height: layout.height }}
             >
-              <Branches nodes={tree.nodes} positions={positions} path={path} />
+              <Branches
+                nodes={tree.nodes}
+                positions={positions}
+                path={path}
+                additions={addPositions}
+              />
               {[...tree.nodes.values()].map((node) => (
                 <FileNode
                   key={node.id}
@@ -856,8 +991,32 @@ export function Workspace({
                   onSection={onSection}
                   scrolls={scrolls}
                   warningCount={warnings.get(node.path ?? "") ?? 0}
+                  onEdit={onEdit}
+                  editor={node.id === editorNode?.id ? editor : undefined}
                 />
               ))}
+              {onEdit &&
+                [...addPositions].map(([id, position]) => {
+                  const node = tree.nodes.get(id);
+                  if (!node?.path) return null;
+                  return (
+                    <button
+                      key={`add-${id}`}
+                      className="branch-add no-pan"
+                      data-parent-path={node.path}
+                      aria-label={`Add follow-up to ${node.title}`}
+                      style={{
+                        transform: `translate(${position.x - 2}px, ${position.y - 2}px)`,
+                      }}
+                      onClick={() => {
+                        focus(id);
+                        onEdit(node.path!, "add");
+                      }}
+                    >
+                      <Icon name="plus" size={20} />
+                    </button>
+                  );
+                })}
             </div>
           </TransformComponent>
         </TransformWrapper>

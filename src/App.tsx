@@ -13,10 +13,25 @@ import {
   clearSession,
   loadSession,
   saveSession,
+  updateSession,
+  saveDraft,
   saveView,
   type SavedSession,
   type WorkspaceView,
 } from "./lib/session";
+import { applyDraft, nextFollowupPath, type EditorDraft } from "./lib/editing";
+import {
+  canWriteFolder,
+  chooseWritableFolder,
+  writeFolder,
+  FolderSaveError,
+  type DirectoryHandle,
+} from "./lib/folder-access";
+const NodeEditor = lazy(() =>
+  import("./components/NodeEditor").then((module) => ({
+    default: module.NodeEditor,
+  })),
+);
 import { readDroppedFiles } from "./lib/drop";
 import { Icon, Mark } from "./components/Icon";
 import { Modal } from "./components/Modal";
@@ -50,6 +65,25 @@ export default function App() {
   const latestView = useRef<{ id: string; view: WorkspaceView } | undefined>(
     undefined,
   );
+  const [draft, setDraft] = useState<EditorDraft>();
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [draftStatus, setDraftStatus] = useState<"saving" | "saved" | "failed">(
+    "saved",
+  );
+  const [editorError, setEditorError] = useState("");
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [fileBusy, setFileBusy] = useState(false);
+  const [fileMessage, setFileMessage] = useState("");
+  const [fileError, setFileError] = useState("");
+  const [browserStatus, setBrowserStatus] = useState<
+    "saving" | "saved" | "failed"
+  >("saved");
+  const draftRef = useRef<EditorDraft | undefined>(undefined);
+  const draftTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const [folderWriteSupported] = useState(canWriteFolder);
+  const [replacement, setReplacement] = useState<Pack>();
   const [candidate, setCandidate] = useState<Pack>();
   const [entry, setEntry] = useState("");
   const [help, setHelp] = useState(false);
@@ -68,6 +102,7 @@ export default function App() {
   );
   useEffect(() => () => controller.current?.abort(), []);
   const storageFailure = useCallback(() => {
+    setBrowserStatus("failed");
     setError(
       "Your browser couldn’t save this session. You can keep exploring, but your place may not be restored after closing the tab.",
     );
@@ -92,8 +127,12 @@ export default function App() {
           window.history.replaceState(null, "", window.location.pathname);
         } else {
           const saved = await loadSession();
-          if (saved && !cancelled)
+          if (saved && !cancelled) {
             setSession({ ...saved, version: ++sequence.current });
+            draftRef.current = saved.draft;
+            setDraft(saved.draft);
+            setEditorOpen(Boolean(saved.draft));
+          }
         }
       } catch {
         if (!cancelled) storageFailure();
@@ -106,19 +145,167 @@ export default function App() {
       cancelled = true;
     };
   }, [storageFailure]);
+  const currentSessionId = session?.id;
+  const persistDraft = useCallback(() => {
+    clearTimeout(draftTimer.current);
+    if (!currentSessionId) return;
+    void saveDraft(currentSessionId, draftRef.current).then(
+      () => setDraftStatus("saved"),
+      () => setDraftStatus("failed"),
+    );
+  }, [currentSessionId]);
+  useEffect(() => {
+    const hidden = () => {
+      if (document.visibilityState === "hidden") persistDraft();
+    };
+    window.addEventListener("pagehide", persistDraft);
+    document.addEventListener("visibilitychange", hidden);
+    return () => {
+      clearTimeout(draftTimer.current);
+      window.removeEventListener("pagehide", persistDraft);
+      document.removeEventListener("visibilitychange", hidden);
+    };
+  }, [persistDraft]);
+  const changeDraft = (next?: EditorDraft) => {
+    draftRef.current = next;
+    setDraft(next);
+    setDraftStatus("saving");
+    setEditorError("");
+    clearTimeout(draftTimer.current);
+    draftTimer.current = setTimeout(persistDraft, 200);
+  };
+  const persistChanges = (next: SavedSession & { version: number }) => {
+    setSession(next);
+    setBrowserStatus("saving");
+    void updateSession(next).then(
+      () => setBrowserStatus("saved"),
+      storageFailure,
+    );
+  };
+  const openEditor = useCallback(
+    (path: string, kind: "edit" | "add") => {
+      if (!session) return;
+      if (!draftRef.current) {
+        const next: EditorDraft = {
+          kind,
+          parent: path,
+          path: kind === "edit" ? path : nextFollowupPath(session.pack, path),
+          text:
+            kind === "edit"
+              ? session.pack.documents.get(path)!.raw
+              : "# New question\n\n",
+        };
+        draftRef.current = next;
+        setDraft(next);
+        setDraftStatus("saving");
+        void saveDraft(session.id, next).then(
+          () => setDraftStatus("saved"),
+          () => setDraftStatus("failed"),
+        );
+      }
+      setEditorError("");
+      setEditorOpen(true);
+    },
+    [session?.pack, currentSessionId],
+  );
+  const applyEditor = async () => {
+    if (!session || !draft) return;
+    try {
+      const result = applyDraft(session.pack, draft, session.originals);
+      const next = {
+        ...session,
+        pack: result.pack,
+        originals: result.originals,
+      };
+      clearTimeout(draftTimer.current);
+      setBrowserStatus("saving");
+      // Commit the updated files and remove the draft in the same transaction.
+      // If storage fails, keep the editor and its text available for recovery.
+      try {
+        await updateSession(next, true);
+      } catch {
+        storageFailure();
+        setEditorError(
+          "The tree could not be saved in this browser. Your draft is still here; keep this tab open and copy your Markdown before leaving.",
+        );
+        setDraftStatus("failed");
+        return;
+      }
+      setSession(next);
+      setBrowserStatus("saved");
+      changeDraft(undefined);
+      setEditorOpen(false);
+    } catch (error) {
+      setEditorError((error as Error).message);
+    }
+  };
+  const saveToFolder = async (another = false) => {
+    if (!session) return;
+    setFileBusy(true);
+    setFileError("");
+    setFileMessage("");
+    let directory: DirectoryHandle | undefined;
+    try {
+      directory =
+        !another && session.directory
+          ? session.directory
+          : await chooseWritableFolder();
+      const saved = await writeFolder(
+        directory,
+        session.pack,
+        session.originals ?? {},
+      );
+      const originals = { ...session.originals };
+      for (const path of saved) delete originals[path];
+      persistChanges({ ...session, directory, originals });
+      setFileMessage(
+        saved.length
+          ? `Saved ${saved.length} Markdown file(s) to ${directory.name}.`
+          : "No pending changes to save. Choose an empty folder to save a complete copy.",
+      );
+    } catch (error) {
+      if (error instanceof FolderSaveError && directory) {
+        persistChanges({ ...session, directory, originals: error.pending });
+      }
+      if ((error as DOMException).name !== "AbortError")
+        setFileError((error as Error).message);
+    } finally {
+      setFileBusy(false);
+    }
+  };
+  const download = async () => {
+    if (!session) return;
+    setFileBusy(true);
+    setFileError("");
+    setFileMessage("");
+    try {
+      const { exportPack } = await import("./lib/export");
+      await exportPack(session.pack);
+      setFileMessage(
+        "ZIP download started. Your Markdown files and folder structure are included.",
+      );
+    } catch (error) {
+      setFileError(`Could not create ZIP: ${(error as Error).message}`);
+    } finally {
+      setFileBusy(false);
+    }
+  };
   const saveWorkspace = useCallback(
     (view: WorkspaceView) => {
-      if (session) {
-        latestView.current = { id: session.id, view };
-        void saveView(session.id, view).catch(storageFailure);
+      if (currentSessionId) {
+        latestView.current = { id: currentSessionId, view };
+        void saveView(currentSessionId, view).catch(storageFailure);
       }
     },
-    [session, storageFailure],
+    [currentSessionId, storageFailure],
   );
   const forgetSession = async () => {
     try {
       await clearSession();
       setSession(undefined);
+      draftRef.current = undefined;
+      setDraft(undefined);
+      clearTimeout(draftTimer.current);
       setHelp(false);
       window.history.replaceState(null, "", window.location.pathname);
     } catch {
@@ -137,12 +324,18 @@ export default function App() {
     // Queue the folder write before the workspace can start saving navigation.
     void saveSession(next).catch(storageFailure);
     latestView.current = undefined;
+    draftRef.current = undefined;
+    setDraft(undefined);
+    clearTimeout(draftTimer.current);
+    setBrowserStatus("saved");
+    setFileMessage("");
+    setFileError("");
     setHome(false);
     setSession({ ...next, version: ++sequence.current });
     setCandidate(undefined);
     setError("");
   };
-  const accept = (pack: Pack) => {
+  const preparePack = (pack: Pack) => {
     const root = pack.documents.get("index.md");
     if (root && (root.children.length || pack.documents.size === 1))
       activate(pack, "index.md", "links");
@@ -150,6 +343,14 @@ export default function App() {
       setCandidate(pack);
       setEntry(root ? "index.md" : pack.documents.keys().next().value!);
     }
+  };
+  const accept = (pack: Pack) => {
+    if (draftRef.current || Object.keys(session?.originals ?? {}).length) {
+      persistDraft();
+      setFileMessage("");
+      setFileError("");
+      setReplacement(pack);
+    } else preparePack(pack);
   };
   const select = async (
     input:
@@ -329,25 +530,84 @@ export default function App() {
             Restoring your session…
           </div>
         ) : session && !home ? (
-          <Suspense
-            fallback={
-              <div className="loading-workspace" role="status">
-                Opening question tree…
+          <>
+            <div className="workspace-savebar">
+              <span role="status">
+                {browserStatus === "saving"
+                  ? "Saving in browser…"
+                  : browserStatus === "failed"
+                    ? "Browser save failed"
+                    : "Saved in browser"}
+                <span className="savebar-detail">
+                  {" "}
+                  ·{" "}
+                  {Object.keys(session.originals ?? {}).length
+                    ? `${Object.keys(session.originals!).length} modified file(s)`
+                    : "Markdown workspace"}
+                </span>
+              </span>
+              <div>
+                {draft && (
+                  <button onClick={() => setEditorOpen(true)}>
+                    Resume draft
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setSaveOpen(true);
+                    setFileError("");
+                    setFileMessage("");
+                  }}
+                >
+                  <Icon name="download" size={16} />
+                  Save &amp; export
+                </button>
               </div>
-            }
-          >
-            <WorkspaceBoundary key={session.version}>
-              <Workspace
-                key={session.version}
-                pack={session.pack}
-                entry={session.entry}
-                mode={session.mode}
-                onHelp={openHelp}
-                initialView={session.view}
-                onSave={saveWorkspace}
-              />
-            </WorkspaceBoundary>
-          </Suspense>
+            </div>
+            <div className="workspace-container">
+              <Suspense
+                fallback={
+                  <div className="loading-workspace" role="status">
+                    Opening question tree…
+                  </div>
+                }
+              >
+                <WorkspaceBoundary key={session.version}>
+                  <Workspace
+                    key={session.version}
+                    pack={session.pack}
+                    entry={session.entry}
+                    mode={session.mode}
+                    onHelp={openHelp}
+                    initialView={session.view}
+                    onSave={saveWorkspace}
+                    onEdit={openEditor}
+                    editor={
+                      draft?.kind === "edit"
+                        ? {
+                            draft,
+                            open: editorOpen,
+                            saving: draftStatus,
+                            error: editorError,
+                            onChange: changeDraft,
+                            onClose: () => {
+                              persistDraft();
+                              setEditorOpen(false);
+                            },
+                            onApply: applyEditor,
+                            onDiscard: () => {
+                              changeDraft(undefined);
+                              persistDraft();
+                              setEditorOpen(false);
+                            },
+                          }
+                        : undefined
+                    }
+                  />
+                </WorkspaceBoundary>
+              </Suspense>
+            </div>
+          </>
         ) : (
           <LandingPage
             dragActive={dragActive}
@@ -374,6 +634,143 @@ export default function App() {
           />
         )}
       </main>
+      {draft?.kind === "add" && (
+        <Suspense fallback={null}>
+          <NodeEditor
+            key={`${draft.kind}:${draft.parent}`}
+            draft={draft}
+            open={editorOpen}
+            saving={draftStatus}
+            error={editorError}
+            onChange={changeDraft}
+            onClose={() => {
+              persistDraft();
+              setEditorOpen(false);
+            }}
+            onApply={applyEditor}
+            onDiscard={() => {
+              changeDraft(undefined);
+              persistDraft();
+              setEditorOpen(false);
+            }}
+          />
+        </Suspense>
+      )}
+      <Modal
+        open={Boolean(replacement)}
+        onClose={() => {
+          if (!fileBusy) setReplacement(undefined);
+        }}
+        title="Replace this workspace?"
+        description="Your current workspace has edits or a draft saved only in this browser. Opening another folder replaces that browser copy."
+      >
+        <div className="save-options">
+          <button
+            className="secondary-button"
+            disabled={fileBusy}
+            onClick={() => void download()}
+          >
+            Download current tree as ZIP
+          </button>
+          {draft && (
+            <p>
+              The ZIP contains applied changes. Keep this workspace and finish
+              your draft first if you want to include it.
+            </p>
+          )}
+          <button
+            className="text-link"
+            disabled={fileBusy}
+            onClick={() => setReplacement(undefined)}
+          >
+            Keep current workspace
+          </button>
+          <button
+            className="primary-button"
+            disabled={fileBusy}
+            onClick={() => {
+              const next = replacement;
+              setReplacement(undefined);
+              if (next) preparePack(next);
+            }}
+          >
+            Open new folder
+          </button>
+          {fileMessage && <p role="status">{fileMessage}</p>}
+          {fileError && (
+            <p className="editor-error" role="alert">
+              {fileError}
+            </p>
+          )}
+        </div>
+      </Modal>
+      <Modal
+        open={saveOpen}
+        onClose={() => {
+          if (!fileBusy) setSaveOpen(false);
+        }}
+        title="Save your Markdown"
+        description="Your browser keeps your working copy. Export it to keep the files outside this browser."
+      >
+        <div className="save-options">
+          {draft && (
+            <p className="warning-text">
+              A draft is waiting. Use Update tree or Add to tree in the editor
+              to include it in saved files.
+            </p>
+          )}
+          <button
+            className="primary-button"
+            onClick={() => void download()}
+            disabled={fileBusy}
+          >
+            <Icon name="download" />
+            Download ZIP
+          </button>
+          <p>
+            All Markdown files, with their current folder structure. Works
+            across browsers.
+          </p>
+          {folderWriteSupported ? (
+            <>
+              <button
+                className="secondary-button"
+                onClick={() => void saveToFolder()}
+                disabled={fileBusy}
+              >
+                <Icon name="folder" />
+                Save to folder
+              </button>
+              <p>
+                {session?.directory
+                  ? `Connected to ${session.directory.name}. Saves changed files after checking for external edits.`
+                  : "Choose your original folder to save changes, or an empty folder for a complete copy. Your browser will request write access."}
+              </p>
+              {session?.directory && (
+                <button
+                  className="text-link"
+                  onClick={() => void saveToFolder(true)}
+                  disabled={fileBusy}
+                >
+                  Choose another folder
+                </button>
+              )}
+            </>
+          ) : (
+            <p>
+              Direct folder saving isn’t available in this browser. Download the
+              ZIP to keep your changes.
+            </p>
+          )}
+          {fileBusy && <p role="status">Preparing your files…</p>}
+          {fileMessage && <p role="status">{fileMessage}</p>}
+          {fileError && (
+            <p className="editor-error" role="alert">
+              {fileError}
+            </p>
+          )}
+        </div>
+      </Modal>
       {progress && (
         <div className="import-progress" role="status">
           <span className="progress-indicator" />
@@ -440,7 +837,7 @@ export default function App() {
         open={warnings}
         onClose={() => setWarnings(false)}
         title="Folder warnings"
-        description="Valid branches remain usable. Edit the source Markdown and reimport to fix these links."
+        description="Valid branches remain usable. Use Edit in a node to fix its Markdown links, or change the source files and reimport."
       >
         <div className="diagnostics">
           {session?.pack.warnings.map((warning, i) => (

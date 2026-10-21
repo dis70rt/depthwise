@@ -124,6 +124,7 @@ export function layoutTree(
   expanded: Set<string>,
   measured: Map<string, number>,
   compact: boolean,
+  editable = false,
 ) {
   const sizes = new Map<string, { width: number; height: number }>();
   const spans = new Map<string, number>();
@@ -141,12 +142,21 @@ export function layoutTree(
     const children = node.children;
     const total =
       children.reduce((sum, id) => sum + (spans.get(id) ?? 0), 0) +
-      Math.max(0, children.length - 1) * 40;
+      Math.max(0, children.length - 1) * 40 +
+      (editable &&
+      expanded.has(node.id) &&
+      node.path &&
+      !node.missing &&
+      !node.reference &&
+      children.length
+        ? 72
+        : 0);
     spans.set(node.id, Math.max(snap(sizes.get(node.id)!.height), total));
   }
   const xs = [48];
   for (let i = 0; i < columns.length; i++) xs[i + 1] = xs[i] + columns[i] + 128;
   const positions = new Map<string, Position>();
+  const additions = new Map<string, Position>();
   const stack = [{ id: tree.root, top: 60 }];
   let bottom = 0;
   let right = 0;
@@ -159,16 +169,32 @@ export function layoutTree(
     positions.set(id, { x: xs[node.depth], y, ...size, center });
     bottom = Math.max(bottom, y + size.height);
     right = Math.max(right, xs[node.depth] + size.width);
+    const canAdd =
+      editable &&
+      expanded.has(node.id) &&
+      Boolean(node.path) &&
+      !node.missing &&
+      !node.reference;
     const childTotal =
       node.children.reduce((sum, child) => sum + spans.get(child)!, 0) +
-      Math.max(0, node.children.length - 1) * 40;
+      Math.max(0, node.children.length - 1) * 40 +
+      (canAdd && node.children.length ? 72 : 0);
     let nextTop = center - childTotal / 2;
     for (const child of node.children) {
       stack.push({ id: child, top: nextTop });
       nextTop += spans.get(child)! + 40;
     }
+    if (canAdd) {
+      const x = node.children.length
+        ? xs[node.depth + 1]
+        : xs[node.depth] + size.width + 48;
+      const y = node.children.length ? nextTop - 8 : center - 20;
+      additions.set(node.id, { x, y, width: 40, height: 40, center: y + 20 });
+      right = Math.max(right, x + 40);
+      bottom = Math.max(bottom, y + 40);
+    }
   }
-  return { positions, width: right + 100, height: bottom + 80 };
+  return { positions, additions, width: right + 100, height: bottom + 80 };
 }
 
 export function folderAncestors(path: string): string[] {

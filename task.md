@@ -65,10 +65,10 @@ Implementation defaults selected under the instruction to complete this task:
 
 - In-app answer generation, quizzes, scoring, and mastery tracking. Authored answers and explanations are supported Markdown content.
 - In-app AI chat, model selection, API keys, and server-side generation.
-- In-app Markdown editing, file creation, rename, move, or write-back to the source folder.
+- Rename, move, or deletion of source files. Markdown editing, new follow-up files, ZIP export, and explicit direct folder saving are now in scope.
 - User accounts, collaboration, sharing links, cloud storage, and publishing.
 - PDF, DOCX, MDX, HTML documents, executable content, and image-based learning nodes.
-- A generic graph editor, manually drawn connections, draggable layout authoring, or arbitrary node creation.
+- A generic graph editor, manually drawn connections, draggable layout authoring, or arbitrary non-Markdown node creation.
 - Mandatory custom JSON manifests, databases, or application-specific markup for authors.
 - A full-screen file manager as the central experience.
 - Skill installation into the user's agent configuration during this planning task.
@@ -1045,3 +1045,18 @@ This replaces the earlier question-only restriction. The skill is general: topic
 - [x] Verify persistence with actual browser uploads, reloads, a new tab, mobile resizing, removal, and unavailable storage.
 
 - [x] Keep the home logo usable with a saved session: return to the landing page and offer Continue exploring without losing the current view.
+
+### 23.17 Edit, extend, and export Markdown
+
+- [x] Add Markdown editing with Write/Preview, using the same sanitized renderer as the reader. Keep free-form Markdown and no mandatory Answer heading.
+- [x] Recover unfinished drafts independently of applied files, offer Keep/Resume/Discard, and atomically update the saved tree before clearing a draft.
+- [x] Create follow-up files with unique relative Markdown paths and add the parent link in the reserved section. Preserve neighboring sections and fenced examples, and escape labels/URLs. Validate size/path/collision limits before changing the pack.
+- [x] Place a prominent Edit action where Collapse was in each expanded node footer. Keep collapse on the question header.
+- [x] Replace the in-card add row with a faint canvas plus beside an open leaf or below existing child branches. Reserve layout space, animate positions with branches, and preserve keyboard labels and visible focus.
+- [x] Export all current Markdown files in a ZIP retaining the folder layout; load ZIP code only when requested.
+- [x] Offer explicit direct folder saving through feature detection, writable directory selection and permission checks. Support saving changed files to the original folder or a complete copy into an empty folder.
+- [x] Compare disk content to original baselines, reject external conflicts/new-file collisions, write children before parent links, preserve non-Markdown files, and retain retry baselines after partial writes.
+- [x] Remember the writable handle in browser storage while rechecking permission on each save. Keep ZIP export available without the native API.
+- [x] Make browser-save and disk/export status distinct; protect modified workspaces and drafts from silent replacement.
+- [x] Keep mobile editor actions visible and make short windows scrollable.
+- [x] Test editing/link generation, file conflicts, denied permission, partial writes, draft recovery, actual ZIP contents, native browser file handles, browser fallback, and add-control layout.

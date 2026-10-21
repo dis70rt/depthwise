@@ -2,7 +2,7 @@
 
 Explore a folder of Markdown questions, answers, and notes as a horizontal question tree with curved branches and an active path. Open a question to read its Markdown and reveal its follow-ups. The canvas moves to a question before its preview expands. A heading outline follows the focused file on the right.
 
-Files stay in your browser. The latest imported folder, expanded branches, focused question, canvas position, and reading positions are saved locally in IndexedDB, so reopening the site resumes your exploration without another upload. There is no account, backend, answer generation, source-file editing, or document telemetry. Use **Help → Forget saved session** to remove the saved folder; clearing site data also removes it. Browser storage restrictions or eviction can prevent restoration.
+Files stay in your browser. The latest imported folder, expanded branches, focused question, canvas position, and reading positions are saved locally in IndexedDB, so reopening the site resumes your exploration without another upload. There is no account, backend, answer generation, or document telemetry. Use **Help → Forget saved session** to remove the saved folder; clearing site data also removes it. Browser storage restrictions or eviction can prevent restoration.
 
 ## Run locally
 
@@ -81,6 +81,16 @@ Supported: UTF-8 Markdown, nested directories, up to 1,000 files, 1 MiB per file
 - When a question control has keyboard focus: Enter/Space toggles, Left selects the parent, Right opens/selects the first child, Up/Down selects siblings, and Home selects the root.
 - Collapsing and reopening preserves explored descendant branches for the session.
 - Reduced-motion preferences disable decorative branch motion and animated focus panning.
+
+## Edit and extend a tree
+
+Open a node and use **Edit** in its footer to write ordinary Markdown or preview it directly inside the expanded node. Adding a follow-up opens a dialog. **Update tree** applies the draft to the browser copy. Unfinished drafts are saved separately and recovered after reopening; **Keep draft** returns the node to reading mode and **Resume draft** returns to it. **Discard draft** leaves the applied document unchanged.
+
+In a linked tree, a light **+** sits to the right of an open leaf or below its existing follow-up branches. It creates a Markdown file and updates its parent’s reserved follow-up links together. Choose a unique relative `.md` path. Folder-derived mode supports editing existing files; authored follow-ups belong to linked trees.
+
+Use **Save & export** to download a ZIP containing all current Markdown files and their folder structure. Where `showDirectoryPicker` is supported, **Save to folder** requests write access: select the original folder to save modified files or an empty folder for a complete copy. Direct saves check existing contents, create new child files before updating parent links, and report partial writes honestly. If another tool edited a file, Depthwise refuses to overwrite it; choose another empty folder or export a ZIP. Downloads include applied changes; finish drafts before exporting. Non-Markdown files are not included in the ZIP and are left untouched by folder saves.
+
+The selected writable handle is remembered locally, but the browser may ask for permission again after reopening. Browsers without direct folder access retain editing, draft recovery and ZIP export. Renaming, moving and deleting files are outside this version. Opening another folder asks before replacing a workspace with edits or an unfinished draft.
 
 ## Browser verification
 

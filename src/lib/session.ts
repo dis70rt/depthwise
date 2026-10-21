@@ -1,3 +1,5 @@
+import type { EditorDraft, Originals } from "./editing";
+import type { DirectoryHandle } from "./folder-access";
 import type { Pack } from "./documents";
 
 export interface WorkspaceView {
@@ -14,6 +16,9 @@ export interface WorkspaceView {
   };
 }
 export interface SavedSession {
+  originals?: Originals;
+  directory?: DirectoryHandle;
+  draft?: EditorDraft;
   id: string;
   pack: Pack;
   entry: string;
@@ -62,6 +67,7 @@ export function saveSession(session: SavedSession): Promise<void> {
     store.put(session, "active");
     store.put(session.id, "active-id");
     store.delete("view");
+    store.delete("draft");
   });
 }
 export function saveView(id: string, view: WorkspaceView): Promise<void> {
@@ -77,7 +83,8 @@ export function loadSession(): Promise<SavedSession | undefined> {
   return transaction("readonly", (store, result) => {
     const active = store.get("active");
     const view = store.get("view");
-    view.onsuccess = () => {
+    const draft = store.get("draft");
+    draft.onsuccess = () => {
       const saved = active.result as SavedSession | undefined;
       if (
         !saved ||
@@ -90,6 +97,7 @@ export function loadSession(): Promise<SavedSession | undefined> {
       }
       result({
         ...saved,
+        draft: draft.result?.id === saved.id ? draft.result.draft : undefined,
         view: view.result?.id === saved.id ? view.result.view : undefined,
       });
     };
@@ -98,5 +106,30 @@ export function loadSession(): Promise<SavedSession | undefined> {
 export function clearSession(): Promise<void> {
   return transaction("readwrite", (store) => {
     store.clear();
+  });
+}
+
+export function updateSession(
+  session: SavedSession,
+  clearDraft = false,
+): Promise<void> {
+  return transaction("readwrite", (store) => {
+    const active = store.get("active-id");
+    active.onsuccess = () => {
+      if (active.result === session.id) {
+        store.put(session, "active");
+        if (clearDraft) store.delete("draft");
+      }
+    };
+  });
+}
+export function saveDraft(id: string, draft?: EditorDraft): Promise<void> {
+  return transaction("readwrite", (store) => {
+    const active = store.get("active-id");
+    active.onsuccess = () => {
+      if (active.result !== id) return;
+      if (draft) store.put({ id, draft }, "draft");
+      else store.delete("draft");
+    };
   });
 }
