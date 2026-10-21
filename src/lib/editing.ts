@@ -3,6 +3,7 @@ import remarkParse from "remark-parse";
 import { toString } from "mdast-util-to-string";
 import type { Root } from "mdast";
 import {
+  assertMarkdownSize,
   buildPack,
   normalizePath,
   parseDocument,
@@ -91,6 +92,7 @@ export function applyDraft(
   draft: EditorDraft,
   originals: Originals = {},
 ): { pack: Pack; originals: Originals; path: string } {
+  assertMarkdownSize(draft.text);
   const path = markdownPath(draft.path);
   if (draft.kind === "edit" && path !== draft.parent)
     throw new Error(

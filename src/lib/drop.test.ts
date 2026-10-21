@@ -123,3 +123,12 @@ describe("dropped Markdown folders", () => {
     ).rejects.toThrow("Open Markdown folder");
   });
 });
+
+it("bounds unsupported directory entries rather than counting only Markdown", async () => {
+  const entries = Array.from({ length: 10001 }, (_, index) =>
+    fileEntry(`ignored-${index}.txt`),
+  );
+  await expect(
+    read(transfer(directory("learning", [entries]))),
+  ).rejects.toThrow("10,000 entry");
+});

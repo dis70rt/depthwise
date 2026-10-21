@@ -44,6 +44,12 @@ export const LIMITS = {
   files: 1000,
   fileBytes: 1024 * 1024,
   totalBytes: 20 * 1024 * 1024,
+  entries: 10000,
+  depth: 64,
+  pathLength: 4096,
+  astNodes: 50000,
+  diagnostics: 5000,
+  parseMilliseconds: 15000,
 };
 
 const parser = unified().use(remarkParse).use(remarkGfm);
@@ -61,6 +67,8 @@ const compiler = unified()
 export function normalizePath(input: string): string {
   if (
     !input ||
+    input.length > LIMITS.pathLength ||
+    input.split("/").length > LIMITS.depth ||
     input.startsWith("/") ||
     input.includes("\\") ||
     /[\u0000-\u001f]/u.test(input)
@@ -118,12 +126,36 @@ function walk(root: unknown, visit: (node: Record<string, unknown>) => void) {
   }
 }
 
+export function assertMarkdownSize(raw: string): void {
+  if (
+    raw.length > LIMITS.fileBytes ||
+    new TextEncoder().encode(raw).length > LIMITS.fileBytes
+  )
+    throw new Error(
+      "Markdown exceeds the 1 MiB UTF-8 limit. The existing text has been kept; use a smaller file.",
+    );
+}
+function warn(warnings: Diagnostic[], warning: Diagnostic) {
+  if (warnings.length >= LIMITS.diagnostics)
+    throw new Error(
+      "Too many Markdown diagnostics. Split this folder into smaller topics.",
+    );
+  warnings.push(warning);
+}
 export function parseDocument(
   path: string,
   raw: string,
   warnings: Diagnostic[],
 ): Document {
+  assertMarkdownSize(raw);
   const ast = parser.parse(raw.replace(/^\uFEFF/, "")) as Root;
+  let count = 0;
+  walk(ast, () => {
+    if (++count > LIMITS.astNodes)
+      throw new Error(
+        "This Markdown file is too complex. Split it into smaller files.",
+      );
+  });
   const slugger = new GithubSlugger();
   const headings: Heading[] = [];
   const definitions = new Map<string, Definition>();
@@ -143,14 +175,14 @@ export function parseDocument(
   });
   const h1 = headings.filter((h) => h.depth === 1);
   if (h1.length !== 1)
-    warnings.push({
+    warn(warnings, {
       file: path,
       message: h1.length
         ? "Multiple H1 headings; the first supplies the question."
         : "No H1 question; using the filename.",
     });
   if (!raw.trim())
-    warnings.push({ file: path, message: "This file is empty." });
+    warn(warnings, { file: path, message: "This file is empty." });
   const children: ChildLink[] = [];
   const hiddenNodes = new Set<Root["children"][number]>();
   const hiddenHeadingIds = new Set<string>();
@@ -179,7 +211,7 @@ export function parseDocument(
         (n) => n.type === "link" || n.type === "linkReference",
       ) as (Link | LinkReference)[];
       if (links.length !== 1) {
-        warnings.push({
+        warn(warnings, {
           file: path,
           message: "Each follow-up bullet needs one Markdown link.",
         });
@@ -191,7 +223,7 @@ export function parseDocument(
           ? link.url
           : definitions.get(link.identifier.toLowerCase())?.url;
       if (!href) {
-        warnings.push({
+        warn(warnings, {
           file: path,
           message: "Unresolved follow-up link reference.",
         });
@@ -201,7 +233,7 @@ export function parseDocument(
     }
   }
   if (sections > 1)
-    warnings.push({
+    warn(warnings, {
       file: path,
       message: "Multiple Follow-up questions sections.",
     });
@@ -252,7 +284,7 @@ export function buildPack(name: string, sources: Source[], ignored = 0): Pack {
       try {
         const result = resolveLink(doc.path, child.href);
         if (!result || result.fragment) {
-          warnings.push({
+          warn(warnings, {
             file: doc.path,
             message: `Invalid structural child: ${child.href}. Use a relative .md path without a fragment.`,
           });
@@ -260,7 +292,7 @@ export function buildPack(name: string, sources: Source[], ignored = 0): Pack {
         }
         child.target = result.path;
         if (seen.has(result.path)) {
-          warnings.push({
+          warn(warnings, {
             file: doc.path,
             message: `Repeated child shown once: ${result.path}`,
           });
@@ -269,17 +301,17 @@ export function buildPack(name: string, sources: Source[], ignored = 0): Pack {
         seen.add(result.path);
         const target = documents.get(result.path);
         if (!target)
-          warnings.push({
+          warn(warnings, {
             file: doc.path,
             message: `Missing child: ${result.path}`,
           });
         else if (child.label !== target.title)
-          warnings.push({
+          warn(warnings, {
             file: doc.path,
             message: `Link label differs from question in ${result.path}.`,
           });
       } catch (error) {
-        warnings.push({ file: doc.path, message: (error as Error).message });
+        warn(warnings, { file: doc.path, message: (error as Error).message });
       }
       return true;
     });
@@ -290,12 +322,12 @@ export function buildPack(name: string, sources: Source[], ignored = 0): Pack {
       try {
         const link = resolveLink(doc.path, href);
         if (link && !documents.has(link.path))
-          warnings.push({
+          warn(warnings, {
             file: doc.path,
             message: `Missing link target: ${link.path}`,
           });
       } catch (error) {
-        warnings.push({ file: doc.path, message: (error as Error).message });
+        warn(warnings, { file: doc.path, message: (error as Error).message });
       }
     });
   }
@@ -311,7 +343,7 @@ export function buildPack(name: string, sources: Source[], ignored = 0): Pack {
       }
   for (const [path, incoming] of parents)
     if (incoming.size > 1)
-      warnings.push({
+      warn(warnings, {
         file: path,
         message:
           "Multiple structural parents; each branch shares this document.",
@@ -326,7 +358,7 @@ export function buildPack(name: string, sources: Source[], ignored = 0): Pack {
         continue;
       }
       if (colors.get(step.path) === 1) {
-        warnings.push({
+        warn(warnings, {
           file: step.path,
           message: "Cycle detected; traversal stops at ancestor references.",
         });
@@ -394,6 +426,8 @@ export async function importFiles(
   signal: AbortSignal,
   progress: (value: string) => void,
 ): Promise<Pack> {
+  if (files.length > LIMITS.entries)
+    throw new Error("Folder exceeds the 10,000 entry scan limit.");
   const folderName =
     files[0]?.webkitRelativePath.split("/")[0] || "Markdown folder";
   const nested = files.some((f) => Boolean(f.webkitRelativePath));
@@ -450,11 +484,33 @@ export async function importFiles(
   // Yield so cancellation can run before the single parse pass.
   await new Promise((resolve) => setTimeout(resolve, 0));
   signal.throwIfAborted();
+  return parseSourcesInWorker(
+    folderName,
+    sources,
+    files.length - accepted.length,
+    signal,
+  );
+}
+export function parseSourcesInWorker(
+  name: string,
+  sources: Source[],
+  ignored = 0,
+  signal = new AbortController().signal,
+): Promise<Pack> {
   return new Promise<Pack>((resolve, reject) => {
     const worker = new Worker(new URL("./parser.worker.ts", import.meta.url), {
       type: "module",
     });
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(
+        new Error(
+          "Markdown parsing timed out. Split this folder into smaller topics.",
+        ),
+      );
+    }, LIMITS.parseMilliseconds);
     const cleanup = () => {
+      clearTimeout(timeout);
       worker.terminate();
       signal.removeEventListener("abort", cancel);
     };
@@ -473,9 +529,9 @@ export async function importFiles(
       reject(new Error("Could not parse this folder. Please retry."));
     };
     worker.postMessage({
-      name: folderName,
+      name,
       sources,
-      ignored: files.length - accepted.length,
+      ignored,
     });
     if (signal.aborted) cancel();
   });

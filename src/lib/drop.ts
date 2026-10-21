@@ -6,6 +6,9 @@ export async function readDroppedFiles(
   signal: AbortSignal,
   progress: (message: string) => void,
 ): Promise<File[]> {
+  let seen = transfer.items.length;
+  if (seen > LIMITS.entries)
+    throw new Error("Folder exceeds the 10,000 entry scan limit.");
   const entries = Array.from(transfer.items)
     .filter((item) => item.kind === "file")
     .map((item) => item.webkitGetAsEntry?.())
@@ -19,6 +22,8 @@ export async function readDroppedFiles(
       throw new Error(
         "Could not read this drop. Use Open Markdown folder instead.",
       );
+    if (fallback.length > LIMITS.entries)
+      throw new Error("Folder exceeds the 10,000 entry scan limit.");
     return fallback;
   }
 
@@ -31,6 +36,11 @@ export async function readDroppedFiles(
     const { entry, parent } = stack.pop()!;
     if (entry.name.startsWith(".") || entry.name === "node_modules") continue;
     const path = parent + entry.name;
+    if (
+      path.length > LIMITS.pathLength ||
+      path.split("/").length > LIMITS.depth
+    )
+      throw new Error("Folder path exceeds the supported depth or length.");
     if (entry.isDirectory) {
       const reader = (entry as FileSystemDirectoryEntry).createReader();
       // Chromium returns directory contents in batches; one read is incomplete.
@@ -40,6 +50,9 @@ export async function readDroppedFiles(
           reader.readEntries(resolve, reject),
         );
         if (!batch.length) break;
+        seen += batch.length;
+        if (seen > LIMITS.entries)
+          throw new Error("Folder exceeds the 10,000 entry scan limit.");
         for (const child of batch)
           stack.push({ entry: child, parent: path + "/" });
       }
